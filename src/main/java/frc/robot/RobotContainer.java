@@ -169,6 +169,7 @@ public class RobotContainer {
         }
 
         m_hood.GoToAngle();
-    // XXXX    m_zoneDetection.publishRawDistance();
+    //    TODO definition is commented out above
+    //    m_zoneDetection.publishRawDistance();
     }
 }
