@@ -169,6 +169,6 @@ public class RobotContainer {
         }
 
         m_hood.GoToAngle();
-        m_zoneDetection.publishRawDistance();
+    // XXXX    m_zoneDetection.publishRawDistance();
     }
 }
