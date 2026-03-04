@@ -11,24 +11,30 @@ import frc.robot.Constants;
 import frc.robot.Constants.HoodConstants;
 
 public class Hood extends SubsystemBase {
-    private SparkFlex hood;
+    private SparkFlex hoodMain;
+    private SparkFlex hoodFollower;
     private SparkClosedLoopController hoodController;
     
     private double hoodangle = 0;
 
-    public Hood() {
-        //hood = new SparkFlex(HoodConstants.HoodCanId, MotorType.kBrushless);
-        hoodController = hood.getClosedLoopController();
+    public Hood(int hoodCanId1, int hoodCanId2) {
+        hoodMain = new SparkFlex(hoodCanId1, MotorType.kBrushless);
+        hoodFollower = new SparkFlex(hoodCanId2, MotorType.kBrushless);
+        hoodController = hoodMain.getClosedLoopController();
         
         // Configure PID and Safety
-        com.revrobotics.spark.config.SparkFlexConfig config = new com.revrobotics.spark.config.SparkFlexConfig();
-        config.closedLoop.pid(Constants.HoodConstants.kP, Constants.HoodConstants.kI, Constants.HoodConstants.kD, ClosedLoopSlot.kSlot0);
-        config.closedLoop.outputRange(-1, 1);
+        com.revrobotics.spark.config.SparkFlexConfig configMain = new com.revrobotics.spark.config.SparkFlexConfig();
+        configMain.closedLoop.pid(Constants.HoodConstants.kP, Constants.HoodConstants.kI, Constants.HoodConstants.kD, ClosedLoopSlot.kSlot0);
+        configMain.closedLoop.outputRange(-1, 1);
         
-        // Apply configuration
-        hood.configure(config, com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters, com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters);
+        com.revrobotics.spark.config.SparkFlexConfig configFollower = new com.revrobotics.spark.config.SparkFlexConfig();
+        configFollower.follow(hoodMain);
 
-        hood.getEncoder().setPosition(0);
+        // Apply configuration
+        hoodMain.configure(configMain, com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters, com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters);
+        hoodFollower.configure(configFollower, com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters, com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters);
+
+        hoodMain.getEncoder().setPosition(0);
         
         SmartDashboard.putNumber("Hood Angle", 0);
     }
@@ -36,7 +42,7 @@ public class Hood extends SubsystemBase {
     @Override
     public void periodic() {
         hoodangle = SmartDashboard.getNumber("Hood Angle", 0);
-        SmartDashboard.putNumber("Actual Hood Angle", hood.getEncoder().getPosition() * HoodConstants.DegreesPerRotation);
+        SmartDashboard.putNumber("Actual Hood Angle", hoodMain.getEncoder().getPosition() * HoodConstants.DegreesPerRotation);
     }
 
     public void GoToAngle() {

@@ -93,6 +93,8 @@ public final class Constants {
     public static final class HoodConstants {
         public static final int HoodCanId1 = 11;
         public static final int HoodCanId2 = 21;
+        public static final int HoodCanId3 = 14;
+        public static final int HoodCanId4 = 24;
         public static final double kP = 0.1;
         public static final double DegreesPerRotation = (1.0 / 18.0) * 360.0;
         public static double kI;
@@ -116,6 +118,9 @@ public final class Constants {
     public static final class TurretConstants {
         public static final int TurretCanId1 = 12;
         public static final int TurretCanId2 = 22;
+
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset1 = new edu.wpi.first.math.geometry.Translation2d(0.0, 0.0);
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(0.0, 0.0);
 
         public static final int encoderCanID1 = 2;
         public static final int encoderCanID2 = 3;

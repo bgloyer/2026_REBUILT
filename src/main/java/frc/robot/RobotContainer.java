@@ -41,17 +41,18 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    // Use the drivetrain's Pigeon2 for ZoneDetection
+    private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
+
     /***************************
      * TORBOTS SPECIFIC VARIABLES
      ******************************/
     private final Intake m_intake = new Intake();
     private final Hopper m_hopper = new Hopper(joystick, m_intake);
-    //private final Shooter m_shooter1 = new Shooter(Constants.ShooterConstants.ShooterCanId1, Constants.ShooterConstants.ShooterCanId2);
-    //private final Shooter m_shooter2 = new Shooter(Constants.ShooterConstants.ShooterCanId3, Constants.ShooterConstants.ShooterCanId4);
+    private final Shooter m_shooter1 = new Shooter(Constants.ShooterConstants.ShooterCanId1, Constants.ShooterConstants.ShooterCanId2, Constants.HoodConstants.HoodCanId1, Constants.HoodConstants.HoodCanId2, Constants.TurretConstants.TurretCanId1, Constants.TurretConstants.TurretOffset1, drivetrain, m_zoneDetection);
+    private final Shooter m_shooter2 = new Shooter(Constants.ShooterConstants.ShooterCanId3, Constants.ShooterConstants.ShooterCanId4, Constants.HoodConstants.HoodCanId3, Constants.HoodConstants.HoodCanId4, Constants.TurretConstants.TurretCanId2, Constants.TurretConstants.TurretOffset2, drivetrain, m_zoneDetection);
     //private final Climber m_climber = new Climber();
-    //private final Hood m_hood = new Hood();
-    // Use the drivetrain's Pigeon2 for ZoneDetection
-    private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
+    
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {

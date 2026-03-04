@@ -20,6 +20,7 @@ public class Turret extends SubsystemBase {
     private TalonFX TurretMotor;
     private SwerveDrivetrain DriveTrain;
     private ZoneDetection zoneDetection;
+    private edu.wpi.first.math.geometry.Translation2d m_robotOffset;
     
     // TalonFX Control Request
     private final PositionVoltage m_request = new PositionVoltage(0).withSlot(0);
@@ -28,9 +29,10 @@ public class Turret extends SubsystemBase {
     // x in inches: 182.1 = 4.6228 m
 
     @SuppressWarnings("rawtypes")
-    public Turret(SwerveDrivetrain drivetrain, ZoneDetection zoneDetection) {
+    public Turret(int turretCanId, edu.wpi.first.math.geometry.Translation2d robotOffset, SwerveDrivetrain drivetrain, ZoneDetection zoneDetection) {
         this.zoneDetection = zoneDetection;
-        TurretMotor = new TalonFX(TurretConstants.TurretCanId1);
+        m_robotOffset = robotOffset;
+        TurretMotor = new TalonFX(turretCanId);
 
         // Configure TalonFX
         var turretConfig = new com.ctre.phoenix6.configs.TalonFXConfiguration();
@@ -121,7 +123,11 @@ public class Turret extends SubsystemBase {
         double targetRelativeDegrees = 0.0;
         
         if (shouldTrack && targetPose != null) {
-            Translation2d delta = targetPose.getTranslation().minus(DriveTrain.getState().Pose.getTranslation());
+            Pose2d currentRobotPose = DriveTrain.getState().Pose;
+            Pose2d turretFieldPose = currentRobotPose.transformBy(
+                new edu.wpi.first.math.geometry.Transform2d(m_robotOffset, new Rotation2d())
+            );
+            Translation2d delta = targetPose.getTranslation().minus(turretFieldPose.getTranslation());
             double targetFieldDegrees = delta.getAngle().getDegrees();
             
             SmartDashboard.putNumber("Turret/Target Field Angle", targetFieldDegrees);
