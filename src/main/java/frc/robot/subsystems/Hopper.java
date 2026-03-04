@@ -1,57 +1,67 @@
 package frc.robot.subsystems;
 
-import java.lang.constant.Constable;
-
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+
+import com.ctre.phoenix6.hardware.CANrange;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants;
 import frc.robot.Constants.HopperConstants;
 
 public class Hopper extends SubsystemBase {
     private final CommandXboxController m_controller;
     
-    //motors
+    // Motors
+    private final SparkFlex flopperMotor;
+    private final SparkFlex towerMotor;
 
-    //references
+    // Sensors
+    private final CANrange canRange1;
+    private final CANrange canRange2;
+
+    // References
     private final Intake m_intake;
 
     public Hopper(CommandXboxController controller, Intake intake) {
-        
-
         m_controller = controller;
         m_intake = intake;
         
+        flopperMotor = new SparkFlex(HopperConstants.FlopperCanID, MotorType.kBrushless);
+        towerMotor = new SparkFlex(HopperConstants.TowerCanID, MotorType.kBrushless);
+
+        canRange1 = new CANrange(HopperConstants.CanRangeID1);
+        canRange2 = new CANrange(HopperConstants.CanRangeID2);
+
         // Safety: Current Limits
-        com.revrobotics.spark.config.SparkFlexConfig flexConfig = new com.revrobotics.spark.config.SparkFlexConfig();
+        SparkFlexConfig flexConfig = new SparkFlexConfig();
         flexConfig.smartCurrentLimit(HopperConstants.HopperCurrentLimit);
         
-        //hopperMotor1.configure(flexConfig, com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters, com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters);
-        //hopperMotor2.configure(flexConfig, com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters, com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters);
+        flopperMotor.configure(flexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        towerMotor.configure(flexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        var splitterConfig = new com.ctre.phoenix6.configs.TalonFXConfiguration();
-        splitterConfig.CurrentLimits.StatorCurrentLimit = HopperConstants.SplitterCurrentLimit;
-        splitterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        //hopperSplitterMotor.getConfigurator().apply(splitterConfig);
+        // Optionally, apply invert if needed based on testing
+        // flexConfig.inverted(true);
     }
 
     @Override
     public void periodic() {
         super.periodic();
-
+        
+        SmartDashboard.putNumber("Hopper/CanRange1_Dist_m", canRange1.getDistance().getValueAsDouble());
+        SmartDashboard.putNumber("Hopper/CanRange2_Dist_m", canRange2.getDistance().getValueAsDouble());
+        SmartDashboard.putBoolean("Hopper/HasBall", hasBall());
     }
 
     /** Sets both hopper motors to the same speed. */
     public void setSpeed(double speed) {
-        //hopperMotor1.set(speed);
-        //hopperMotor2.set(-speed);
-        //hopperSplitterMotor.set(speed);
+        flopperMotor.set(speed);
+        towerMotor.set(speed);
     }
 
     public void stop() {
@@ -70,17 +80,14 @@ public class Hopper extends SubsystemBase {
         return run(() -> setSpeed(speed));
     }
 
-    /** Runs both hoppers at default feed speed; stops when command ends (e.g. button released). */
+    /** Runs both hoppers at default feed speed; stops when a ball is present. */
     public Command runHopperCommand() {
         return run(() -> {
-            // Use cached measurement from periodic()
-            // Check for valid measurement and distance threshold
-            /*if (m_latestMeasurement != null && m_latestMeasurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && 
-                m_latestMeasurement.distance_mm < HopperConstants.LaserMinDistance) {
-                feed(HopperConstants.HopperFeedSpeed);
-            } else {
+            if (hasBall()) {
                 stop();
-            }*/
+            } else {
+                feed(HopperConstants.HopperFeedSpeed);
+            }
         }).finallyDo(interrupted -> stop());
     }
 
@@ -93,15 +100,14 @@ public class Hopper extends SubsystemBase {
     }
     
     /**
-     * Checks if a ball is detected by the LaserCan.
-     * @return true if ball is present (distance < Threshold), false otherwise.
+     * Checks if a ball is detected by the CANrange sensors.
+     * @return true if ball is present.
      */
     public boolean hasBall() {
-        /*return m_latestMeasurement != null && 
-               m_latestMeasurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && 
-               m_latestMeasurement.distance_mm < HopperConstants.LaserMinDistance;*/
-
-               return false;
+        // LaserMinDistance is 200.0 (mm), CANrange gets distance in meters
+        boolean range1HasBall = canRange1.getDistance().getValueAsDouble() < (HopperConstants.LaserMinDistance / 1000.0);
+        boolean range2HasBall = canRange2.getDistance().getValueAsDouble() < (HopperConstants.LaserMinDistance / 1000.0);
+        return range1HasBall || range2HasBall;
     }
 
     /**

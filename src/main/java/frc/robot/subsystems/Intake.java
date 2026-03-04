@@ -24,8 +24,8 @@ public class Intake extends SubsystemBase {
     private Double m_deployTarget = null;
 
     public Intake() {
-        intakeMotor = new TalonFX(IntakeConstants.IntakeCanId, "rio");
-        deployMotor = new TalonFX(IntakeConstants.IntakeDeployCanId, "rio");
+        intakeMotor = new TalonFX(IntakeConstants.IntakeCanId);
+        deployMotor = new TalonFX(IntakeConstants.IntakeDeployCanId);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Slot0.kP = IntakeConstants.kP;
@@ -114,7 +114,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command stopCommand() {
-        return runOnce(this::stop);
+        return runOnce(this::stopIntake);
     }
     
     // Deployment Methods

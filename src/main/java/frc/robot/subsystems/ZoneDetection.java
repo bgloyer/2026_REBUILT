@@ -23,7 +23,7 @@ public class ZoneDetection extends SubsystemBase {
     public ZONE myZone;
     private Pigeon2 m_gyro;
 
-    private final String[] limelightNames = {"limelight-front", "limelight-left", "limelight-right"};
+    private final String[] limelightNames = {"limelight-left", "limelight-right"};
 
     public ZoneDetection(CommandSwerveDrivetrain drivetrain, Pigeon2 gyro) {
         this.drivetrain = drivetrain;
@@ -79,6 +79,7 @@ public class ZoneDetection extends SubsystemBase {
         
         SmartDashboard.putString("Zone", myZone.toString());
     }
+    
     private void processLimelight(String name) {
         // Update orientation for MegaTag2 for THIS camera
         LimelightHelpers.SetRobotOrientation(name, m_gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
@@ -92,59 +93,33 @@ public class ZoneDetection extends SubsystemBase {
         }
 
         // --- Standard Deviation Tuning ---
-        double xyStdDev = 0.5;
-        double degStdDev = 10.0;
+        double xyStdDev;
+        // MegaTag2 uses the robot's gyro for rotation, so we tell the pose estimator to NOT trust the vision rotation
+        double degStdDev = 9999999.0;
 
         // Trust multi-tag observations much more
         if (mt2.tagCount >= 2) {
-            xyStdDev = 0.3;
-            degStdDev = 1.0; 
+            xyStdDev = 0.3; // Very trustworthy with multiple tags
         } 
         // Single tag logic
         else {
-            if (mt2.avgTagDist > 5.0) {
-                xyStdDev = 5.0; // Very untrustworthy at range
-            } else if (mt2.avgTagDist > 3.0) {
-                xyStdDev = 1.0;
-            } else {
-                xyStdDev = 0.5;
+            if (mt2.avgTagDist > 4.0) {
+                return; // Discard single tags over 4 meters to prevent pose jumps from high ambiguity
             }
+            // Scale std dev based on distance squared
+            xyStdDev = 0.5 + (mt2.avgTagDist * mt2.avgTagDist / 12.0);
         }
 
         // Add measurement to drivetrain
         drivetrain.addVisionMeasurement(mt2.pose, mt2.timestampSeconds,
-            VecBuilder.fill(xyStdDev, xyStdDev, Units.degreesToRadians(degStdDev)));
+            VecBuilder.fill(xyStdDev, xyStdDev, degStdDev));
 
-        // Just push to dashboard for debugging (maybe just the front one or average?)
+        // Just push to dashboard for debugging
         SmartDashboard.putNumber("Vision/" + name + "/TagCount", mt2.tagCount);
         SmartDashboard.putNumber("Vision/" + name + "/AvgDist", mt2.avgTagDist);
     }
 
     public ZONE getZone() {
         return myZone;
-    }
-
-    public void publishRawDistance() {
-        // Read raw target pose in camera space directly from NetworkTables
-        // This avoids JSON parsing overhead if we just want distance
-        var entry = frc.robot.LimelightHelpers.getLimelightDoubleArrayEntry("limelight-front", "targetpose_cameraspace");
-        /*double[] targetPoseArray = entry.getDouble(new double[6]);
-
-        // Check if we have a valid target (array length 6 and not all zeros)
-        if (targetPoseArray.length >= 6 && (targetPoseArray[0] != 0 || targetPoseArray[2] != 0)) {
-            // Pose is [x, y, z, roll, pitch, yaw]
-            // Distance = sqrt(x^2 + y^2 + z^2)
-            double distanceMeters = Math.sqrt(
-                Math.pow(targetPoseArray[0], 2) + 
-                Math.pow(targetPoseArray[1], 2) + 
-                Math.pow(targetPoseArray[2], 2)
-            );
-
-            SmartDashboard.putNumber("Vision/RawDistance", distanceMeters);
-            SmartDashboard.putNumber("Vision/RawDistanceInches", edu.wpi.first.math.util.Units.metersToInches(distanceMeters));
-        } else {
-            SmartDashboard.putNumber("Vision/RawDistance", 0.0);
-            SmartDashboard.putNumber("Vision/RawDistanceInches", 0.0);
-        }*/
     }
 }

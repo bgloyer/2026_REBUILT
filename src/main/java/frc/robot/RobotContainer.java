@@ -20,6 +20,7 @@ import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Hopper;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.ZoneDetection;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -44,15 +45,13 @@ public class RobotContainer {
      * TORBOTS SPECIFIC VARIABLES
      ******************************/
     private final Intake m_intake = new Intake();
-    //private final Hopper m_hopper = new Hopper(joystick, m_intake);
+    private final Hopper m_hopper = new Hopper(joystick, m_intake);
     //private final Shooter m_shooter1 = new Shooter(Constants.ShooterConstants.ShooterCanId1, Constants.ShooterConstants.ShooterCanId2);
     //private final Shooter m_shooter2 = new Shooter(Constants.ShooterConstants.ShooterCanId3, Constants.ShooterConstants.ShooterCanId4);
     //private final Climber m_climber = new Climber();
     //private final Hood m_hood = new Hood();
     // Use the drivetrain's Pigeon2 for ZoneDetection
-    // private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain,
-    // drivetrain.getPigeon2());
-
+    private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
