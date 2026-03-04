@@ -19,6 +19,9 @@ public class Intake extends SubsystemBase {
     
     private final VelocityVoltage m_VelocityRequest = new VelocityVoltage(0).withSlot(0);
     private final PositionVoltage m_DeployRequest = new PositionVoltage(0).withSlot(0);
+    private final com.ctre.phoenix6.controls.NeutralOut m_StopDeployRequest = new com.ctre.phoenix6.controls.NeutralOut();
+
+    private Double m_deployTarget = null;
 
     public Intake() {
         intakeMotor = new TalonFX(IntakeConstants.IntakeCanId, "rio");
@@ -57,6 +60,13 @@ public class Intake extends SubsystemBase {
     public void periodic() {
         super.periodic();
 
+        if (m_deployTarget != null) {
+            double currentPos = deployMotor.getPosition().getValueAsDouble();
+            if (Math.abs(currentPos - m_deployTarget) < IntakeConstants.DeployTolerance) {
+                stopDeploy();
+            }
+        }
+
         //SmartDashboard.putNumber("Intake Position", deployMotor.getPosition().getValueAsDouble());
     }
 
@@ -64,12 +74,12 @@ public class Intake extends SubsystemBase {
         intakeMotor.set(speed);
     }
 
-    public void stop() {
+    public void stopIntake() {
         setSpeed(0.0);
     }
 
     public void runIntake(ChassisSpeeds speed) {
-        if (SmartDashboard.getBoolean("Intake/UseVariableSpeed", true)) {
+
             double robotVelocity = Math.hypot(speed.vxMetersPerSecond, speed.vyMetersPerSecond);
 
             // Calculate target speed in Meters Per Second
@@ -78,12 +88,6 @@ public class Intake extends SubsystemBase {
                 Constants.IntakeConstants.Min_Surface_Speed, 
                 robotVelocity * Constants.IntakeConstants.RobotSpeedMultiplier
             );
-
-            setSurfaceSpeed(targetSpeed);
-        } else {
-            // Constant Speed: Runs at fixed Duty Cycle
-            setSpeed(Constants.IntakeConstants.IntakeDutyCycle);
-        }
     }
 
     public void runOuttake() {
@@ -93,20 +97,20 @@ public class Intake extends SubsystemBase {
     public Command runIntakeCommand(java.util.function.Supplier<ChassisSpeeds> speedSupplier) {
         return run(() -> runIntake(speedSupplier.get()))
             .beforeStarting(this::deploy)
-            .finallyDo(interrupted -> stop());
+            .finallyDo(interrupted -> stopIntake());
     }
 
     public Command runIntakeCommand(ChassisSpeeds speed) {
         return run(() -> runIntake(speed))
             .beforeStarting(this::deploy)
-            .finallyDo(interrupted -> stop());
+            .finallyDo(interrupted -> stopIntake());
     }
 
     public Command runOuttakeCommand() {
         // Assume we want to deploy to outtake as well, to clear the robot frame
         return run(() -> runOuttake())
             .beforeStarting(this::deploy)
-            .finallyDo(interrupted -> stop());
+            .finallyDo(interrupted -> stopIntake());
     }
 
     public Command stopCommand() {
@@ -115,13 +119,13 @@ public class Intake extends SubsystemBase {
     
     // Deployment Methods
     public void deploy() {
+        m_deployTarget = IntakeConstants.DeployPosition;
         deployMotor.setControl(m_DeployRequest.withPosition(IntakeConstants.DeployPosition));
-        //deployMotor.set(-0.2);
     }
 
     public void retract() {
+        m_deployTarget = IntakeConstants.RetractPosition;
         deployMotor.setControl(m_DeployRequest.withPosition(IntakeConstants.RetractPosition));
-        //deployMotor.set(0.2);
     }
 
     public Command runRetractCommand() {
@@ -135,11 +139,12 @@ public class Intake extends SubsystemBase {
             run(() -> setSpeed(-IntakeConstants.IntakeDutyCycle)).withTimeout(0.25), // Reverse for 0.25s
             run(() -> setSpeed(IntakeConstants.IntakeDutyCycle)).withTimeout(0.25)   // Forward for 0.25s
         ).repeatedly()
-        .finallyDo(interrupted -> stop());
+        .finallyDo(interrupted -> stopDeploy());
     }
 
     public void stopDeploy() {
-        //deployMotor.set(0);;
+        m_deployTarget = null;
+        deployMotor.setControl(m_StopDeployRequest);
     }
 
     public void setSurfaceSpeed(double mps) {

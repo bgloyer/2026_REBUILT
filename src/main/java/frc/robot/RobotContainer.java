@@ -101,33 +101,27 @@ public class RobotContainer {
             )
         );
 
-        //m_shooter.setDefaultCommand(m_shooter.runIdleCommand());
-
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
-        //final var idle = new SwerveRequest.Idle();
-        //RobotModeTriggers.disabled().whileTrue(
-        //        drivetrain.applyRequest(() -> idle).ignoringDisable(true));
-
-        drivetrain.registerTelemetry(logger::telemeterize);
-
-        //********************WORKING FUNCTIONS *****************************/
-
-        joystick.a().whileTrue(m_intake.runIntakeCommand(drivetrain.getState().Speeds));
-
-        joystick.rightBumper().onTrue(Commands.runOnce(()->m_intake.deploy()));
-        joystick.leftBumper().onTrue(Commands.runOnce(()->m_intake.retract()));
-
-
         // Brake (X-Stance): hold Right Bumper
         //joystick.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
         // Reset the field-centric heading on left bumper press.
         //joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
+
+        drivetrain.registerTelemetry(logger::telemeterize);
+
+        //********************WORKING FUNCTIONS *****************************/
+
+        // Right bumper deploys and runs intake
+        joystick.rightBumper().whileTrue(m_intake.runIntakeCommand(drivetrain.getState().Speeds));
+        
+        // Left bumper retracts intake
+        joystick.leftBumper().onTrue(m_intake.runRetractCommand());
+
+
         //********************FUNCTIONS For Testing*****************************/
 
         // TODO: Remove this manual binding in the future.
-        //joystick.b().whileTrue(m_hopper.runHopperCommand());
+        joystick.b().whileTrue(m_hopper.runHopperCommand());
 
     }
 
