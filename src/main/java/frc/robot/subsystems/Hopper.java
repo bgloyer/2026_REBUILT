@@ -60,7 +60,7 @@ public class Hopper extends SubsystemBase {
 
     /** Sets both hopper motors to the same speed. */
     public void setSpeed(double speed) {
-        flopperMotor.set(speed);
+        flopperMotor.set(-speed);
         towerMotor.set(speed);
     }
 

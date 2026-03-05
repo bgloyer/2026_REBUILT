@@ -40,7 +40,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     // Use the drivetrain's Pigeon2 for ZoneDetection
-    //private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
+    private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
 
     /***************************
      * TORBOTS SPECIFIC VARIABLES
