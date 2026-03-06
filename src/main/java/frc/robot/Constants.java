@@ -109,7 +109,7 @@ public final class Constants {
         public static final double kV = 0.12;
         public static final double CurrentLimit = 80.0;
         
-        public static final double IdleSpeed = 15.0; // RPS (~900 RPM)
+        public static final double IdleSpeed = 0.9f; //Need to find control speed, currently just set to voltage
     }
 
     public static final class TurretConstants {

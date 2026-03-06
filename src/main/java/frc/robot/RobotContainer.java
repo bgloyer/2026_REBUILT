@@ -113,8 +113,11 @@ public class RobotContainer {
                 // negative X (left)
                 ));
 
-        leftShooter.setDefaultCommand(Commands.run(() -> leftShooter.LeftSpin(0.9), leftShooter));
-        rightShooter.setDefaultCommand(Commands.run(() -> rightShooter.RightSpin(0.9), rightShooter));
+        // Shooter idle commands
+        leftShooter.setDefaultCommand(
+                Commands.run(() -> leftShooter.LeftSpin(Constants.ShooterConstants.IdleSpeed), leftShooter));
+        rightShooter.setDefaultCommand(
+                Commands.run(() -> rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter));
 
         // Brake (X-Stance): hold Right Bumper
         // joystick.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
