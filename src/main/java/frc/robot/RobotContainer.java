@@ -96,6 +96,13 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Hood/ManualAngleLeft", 0.0);
                 SmartDashboard.putNumber("Hood/ManualAngleRight", 0.0);
                 SmartDashboard.putBoolean("Hood/UseManualPosition", false);
+
+                // Shooter manual testing inputs
+                SmartDashboard.putNumber("Shooter/ManualPowerLeft", 0.0);
+                SmartDashboard.putNumber("Shooter/ManualPowerRight", 0.0);
+                SmartDashboard.putNumber("Shooter/ManualRPMMLeft", 0.0);
+                SmartDashboard.putNumber("Shooter/ManualRPMMRight", 0.0);
+                SmartDashboard.putBoolean("Shooter/UseManualRPM", false);
         }
 
         private void configureNamedCommands() {
@@ -232,6 +239,20 @@ public class RobotContainer {
                         double rightHoodPower = SmartDashboard.getNumber("Hood/ManualPowerRight", 0.0);
                         leftHood.setPower(leftHoodPower);
                         rightHood.setPower(rightHoodPower);
+                }
+
+                // Shooter Testing
+                boolean useShooterRPM = SmartDashboard.getBoolean("Shooter/UseManualRPM", false);
+                if (useShooterRPM) {
+                        double leftRPM = SmartDashboard.getNumber("Shooter/ManualRPMMLeft", 0.0);
+                        double rightRPM = SmartDashboard.getNumber("Shooter/ManualRPMMRight", 0.0);
+                        leftShooter.LeftSpin(leftRPM);
+                        rightShooter.RightSpin(rightRPM);
+                } else {
+                        double leftShooterPower = SmartDashboard.getNumber("Shooter/ManualPowerLeft", 0.0);
+                        double rightShooterPower = SmartDashboard.getNumber("Shooter/ManualPowerRight", 0.0);
+                        leftShooter.setPowerLeft(leftShooterPower);
+                        rightShooter.setPowerRight(rightShooterPower);
                 }
         }
 
