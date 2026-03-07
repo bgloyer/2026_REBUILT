@@ -8,18 +8,25 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Hopper;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.ZoneDetection;
+import frc.robot.subsystems.Turret.TURRENT_SIDE;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -54,8 +61,13 @@ public class RobotContainer {
             Constants.ShooterConstants.ShooterCanId4, m_hopper);
 
     // Turrets for testing
-    private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2);
-    private final Turret rightTurret = new Turret(Constants.TurretConstants.TurretCanId1);
+    private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2, 
+        Constants.TurretConstants.TurretOffset1, drivetrain, m_zoneDetection, TURRENT_SIDE.LEFT);
+    private final Turret rightTurret = new Turret(Constants.TurretConstants.TurretCanId1,
+        Constants.TurretConstants.TurretOffset1, drivetrain, m_zoneDetection, TURRENT_SIDE.RIGHT);
+        
+    private final Hood rightHood = new Hood(Constants.HoodConstants.HoodCanId1);
+    private final Hood leftHood = new Hood(Constants.HoodConstants.HoodCanId2);
 
     // private final Climber m_climber = new Climber();
 
@@ -64,6 +76,9 @@ public class RobotContainer {
     public RobotContainer() {
         configureNamedCommands();
         configureBindings();
+
+        //setting our inital pose
+        drivetrain.getState().Pose = new Pose2d(new Translation2d(0, 0), new Rotation2d(-90));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto selection", autoChooser);
@@ -114,10 +129,10 @@ public class RobotContainer {
                 ));
 
         // Shooter idle commands
-        leftShooter.setDefaultCommand(
+        /*leftShooter.setDefaultCommand(
                 Commands.run(() -> leftShooter.LeftSpin(Constants.ShooterConstants.IdleSpeed), leftShooter));
         rightShooter.setDefaultCommand(
-                Commands.run(() -> rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter));
+                Commands.run(() -> rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter));*/
 
         // Brake (X-Stance): hold Right Bumper
         // joystick.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -135,7 +150,14 @@ public class RobotContainer {
         driverController.a().onTrue(Commands.runOnce(() -> m_intake.runIntake(drivetrain.getState().Speeds)))
                 .onFalse(Commands.runOnce(() -> m_intake.stopIntake()));
 
-        driverController.rightTrigger(0.5f).whileTrue(m_hopper.runShootCommand());
+
+        ParallelCommandGroup shootGroup = new ParallelCommandGroup(Commands.run(() -> leftShooter.LeftSpin(Constants.ShooterConstants.IdleSpeed), leftShooter),
+                Commands.run(() -> rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter), m_hopper.runShootCommand());
+                
+        ParallelCommandGroup stopShooters = new ParallelCommandGroup(Commands.run(() -> leftShooter.LeftSpin(0), leftShooter),
+                Commands.run(() -> rightShooter.RightSpin(0)));
+
+        driverController.rightTrigger(0.5f).whileTrue(shootGroup).onFalse(stopShooters);
 
         // Click to drop intake
         driverController.rightBumper().onTrue(m_intake.runDeployCommand());
@@ -149,12 +171,12 @@ public class RobotContainer {
 
         // --- Turret Testing (D-Pad) ---
         // Left Turret: D-Pad Left/Right
-        driverController.povLeft().onTrue(leftTurret.ManualTurnLeft()).onFalse(leftTurret.StopTurret());
-        driverController.povRight().onTrue(leftTurret.ManualTurnRight()).onFalse(leftTurret.StopTurret());
+        //driverController.povLeft().onTrue(rightHood.ManualHoodUp()).onFalse(rightHood.ManualHoodStop());
+        //driverController.povRight().onTrue(rightHood.ManualHoodDown()).onFalse(rightHood.ManualHoodStop());
 
         // Right Turret: D-Pad Up/Down
-        driverController.povUp().onTrue(rightTurret.ManualTurnLeft()).onFalse(rightTurret.StopTurret());
-        driverController.povDown().onTrue(rightTurret.ManualTurnRight()).onFalse(rightTurret.StopTurret());
+        //driverController.povUp().onTrue(leftHood.ManualHoodUp()).onFalse(leftHood.ManualHoodStop());
+        //driverController.povDown().onTrue(leftHood.ManualHoodDown()).onFalse(leftHood.ManualHoodStop());
     }
 
     public Command getAutonomousCommand() {
@@ -162,18 +184,7 @@ public class RobotContainer {
     }
 
     public void testPeriodic() {
-        /*
-         * if (joystick.getHID().getLeftBumper()) {
-         * m_shooter1.Spin();
-         * m_shooter2.Spin();
-         * } else {
-         * m_shooter1.Stop();
-         * m_shooter2.Stop();
-         * }
-         * 
-         * m_hood.GoToAngle();
-         */
-        // TODO definition is commented out above
-        // m_zoneDetection.publishRawDistance();
+
     }
+
 }

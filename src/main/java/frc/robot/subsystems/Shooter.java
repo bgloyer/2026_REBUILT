@@ -2,13 +2,17 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
+
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShooterConstants;
 
@@ -31,11 +35,20 @@ public class Shooter extends SubsystemBase {
     public Shooter(int shooterID1, int shooterID2, int hoodID1, int hoodID2, int turretID,
             edu.wpi.first.math.geometry.Translation2d turretOffset, CommandSwerveDrivetrain drivetrain,
             ZoneDetection zoneDetection) {
-        m_hood = new Hood(hoodID1, hoodID2);
-        m_turret = new Turret(turretID, turretOffset, drivetrain, zoneDetection);
+        //m_hood = new Hood(hoodID1, hoodID2);
+        //m_turret = new Turret(turretID, turretOffset, drivetrain, zoneDetection);
 
         shooterWheel1 = new SparkMax(shooterID1, MotorType.kBrushless);
         shooterWheel2 = new SparkMax(shooterID2, MotorType.kBrushless);
+
+        SparkMaxConfig config = new SparkMaxConfig();
+        EncoderConfig encoderConfig = new EncoderConfig();
+
+        encoderConfig.velocityConversionFactor(1);
+        
+        config.encoder.apply(encoderConfig);
+        shooterWheel1.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        shooterWheel2.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // shooterWheel1.configure(new SparkBaseConfig().ap,
         // com.revrobotics.ResetMode.kNoResetSafeParameters,
@@ -90,11 +103,15 @@ public class Shooter extends SubsystemBase {
     public void RightSpin(double speed) {
         shooterWheel1.set(speed);
         shooterWheel2.set(-speed);
+
+        SmartDashboard.putNumber("Right Shooter", shooterWheel1.getEncoder().getVelocity());
     }
 
     public void LeftSpin(double speed) {
         shooterWheel1.set(speed);
         shooterWheel2.set(speed);
+
+        SmartDashboard.putNumber("Left Shooter", shooterWheel2.getEncoder().getVelocity());
     }
 
     public boolean isAtSpeed() {

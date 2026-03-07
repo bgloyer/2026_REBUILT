@@ -90,8 +90,6 @@ public final class Constants {
     public static final class HoodConstants {
         public static final int HoodCanId1 = 11;
         public static final int HoodCanId2 = 21;
-        public static final int HoodCanId3 = 14;
-        public static final int HoodCanId4 = 24;
         public static final double kP = 0.1;
         public static final double DegreesPerRotation = (1.0 / 18.0) * 360.0;
         public static double kI;
@@ -116,8 +114,8 @@ public final class Constants {
         public static final int TurretCanId1 = 12; //right 
         public static final int TurretCanId2 = 22; //left
 
-        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset1 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(-8.15));
-        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(8.15));
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset1 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(-8.15)); //left
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(8.15)); //right
 
         public static final int encoderCanID1 = 2;
         public static final int encoderCanID2 = 3;
@@ -130,10 +128,10 @@ public final class Constants {
         public static final double CurrentLimit = 30.0;
 
         // Gear Ratio: 240/24 = 10:1 reduction
-        public static final double TurretGearRatio = 24.0 / 240.0;
+        public static final double TurretGearRatio = 3f / 100f;
 
         public static final double MinAngle = -90.0;
-        public static final double MaxAngle = 270.0;        
+        public static final double MaxAngle = 90.0;        
 
     }
 
