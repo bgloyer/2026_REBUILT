@@ -43,11 +43,8 @@ public class RobotContainer {
                                                                                  // motors
 
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-
         private final Telemetry logger = new Telemetry(MaxSpeed);
-
         private final CommandXboxController driverController = new CommandXboxController(0);
-
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
         // Use the drivetrain's Pigeon2 for ZoneDetection

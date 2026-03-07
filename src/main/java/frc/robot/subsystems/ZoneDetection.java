@@ -16,21 +16,25 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 
 public class ZoneDetection extends SubsystemBase {
 
-    // private final NetworkTable limelightTable; // No longer holding a single table
+    // private final NetworkTable limelightTable; // No longer holding a single
+    // table
     private final CommandSwerveDrivetrain drivetrain;
 
-    public enum ZONE {RED, NEUTRAL, BLUE};
+    public enum ZONE {
+        RED, NEUTRAL, BLUE
+    };
+
     public ZONE myZone;
     private Pigeon2 m_gyro;
 
-    private final String[] limelightNames = {"limelight-left", "limelight-right"};
+    private final String[] limelightNames = { "limelight-left", "limelight-right" };
 
     public ZoneDetection(CommandSwerveDrivetrain drivetrain, Pigeon2 gyro) {
         this.drivetrain = drivetrain;
         m_gyro = gyro;
-        
+
         // No need to store NetworkTables, LimelightHelpers handles it by name
-        
+
         // Default to Blue if unknown
         myZone = ZONE.BLUE;
     }
@@ -51,7 +55,8 @@ public class ZoneDetection extends SubsystemBase {
         // Get current robot X position (Blue Alliance Origin)
         double botX = drivetrain.getState().Pose.getX();
 
-        // Initialization Check: If we are at 0,0 (likely uninitialized), try to guess based on Alliance
+        // Initialization Check: If we are at 0,0 (likely uninitialized), try to guess
+        // based on Alliance
         if (botX == 0.0 && drivetrain.getState().Pose.getY() == 0.0) {
             var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
             if (alliance.isPresent()) {
@@ -65,7 +70,7 @@ public class ZoneDetection extends SubsystemBase {
             SmartDashboard.putString("Zone", myZone.toString());
             return;
         }
-        
+
         double blueLine = frc.robot.Constants.FieldConstants.BlueAllianceLineX;
         double redLine = frc.robot.Constants.FieldConstants.RedAllianceLineX;
 
@@ -76,16 +81,21 @@ public class ZoneDetection extends SubsystemBase {
         } else {
             myZone = ZONE.NEUTRAL;
         }
-        
+
         SmartDashboard.putString("Zone", myZone.toString());
     }
-    
+
     private void processLimelight(String name) {
-        // Update orientation for MegaTag2 for THIS camera
-        //LimelightHelpers.SetRobotOrientation(name, m_gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
-        
+        // Update orientation for MegaTag2 for THIS camera (using the SwerveDrivetrain's
+        // fused heading or raw yaw)
+        // Megatag2 requires CCW-positive heading. Both Pigeon2 yaw and Drivetrain pose
+        // rotation are CCW+.
+        LimelightHelpers.SetRobotOrientation(name, m_gyro.getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+
         // Get the MegaTag2 estimate directly
-        PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+        // PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+        // //megatag1 in case
+        PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
 
         // Basic validation: must have tags and not be an empty pose
         if (mt2.tagCount == 0 || mt2.pose == null) {
@@ -94,13 +104,14 @@ public class ZoneDetection extends SubsystemBase {
 
         // --- Standard Deviation Tuning ---
         double xyStdDev;
-        // MegaTag2 uses the robot's gyro for rotation, so we tell the pose estimator to NOT trust the vision rotation
+        // MegaTag2 uses the robot's gyro for rotation, so we tell the pose estimator to
+        // NOT trust the vision rotation
         double degStdDev = 9999999.0;
 
         // Trust multi-tag observations much more
         if (mt2.tagCount >= 2) {
             xyStdDev = 0.3; // Very trustworthy with multiple tags
-        } 
+        }
         // Single tag logic
         else {
             if (mt2.avgTagDist > 4.0) {
@@ -112,7 +123,7 @@ public class ZoneDetection extends SubsystemBase {
 
         // Add measurement to drivetrain
         drivetrain.addVisionMeasurement(mt2.pose, mt2.timestampSeconds,
-            VecBuilder.fill(xyStdDev, xyStdDev, degStdDev));
+                VecBuilder.fill(xyStdDev, xyStdDev, degStdDev));
 
         // Just push to dashboard for debugging
         SmartDashboard.putNumber("Vision/" + name + "/TagCount", mt2.tagCount);
