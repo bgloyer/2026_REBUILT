@@ -47,7 +47,7 @@ public final class Constants {
         // Interior space is ~10.25 inches (260mm).
         public static final double LaserMinDistance = 200.0;
 
-        public static final double HopperFeedSpeed = 0.8;
+        public static final double HopperFeedSpeed = 0.9;
         
         public static final int HopperCurrentLimit = 40;
         public static final double SplitterCurrentLimit = 30.0;
@@ -130,8 +130,8 @@ public final class Constants {
         // Gear Ratio: 240/24 = 10:1 reduction
         public static final double TurretGearRatio = 1f / 8f;
 
-        public static final double MinAngle = -2;
-        public static final double MaxAngle = 2; //need to convert to angle and eventually use radians        
+        public static final double MinAngle = -90;
+        public static final double MaxAngle = 90; //need to convert to angle and eventually use radians        
 
     }
 

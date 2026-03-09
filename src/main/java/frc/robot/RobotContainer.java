@@ -48,7 +48,7 @@ public class RobotContainer {
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
         // Use the drivetrain's Pigeon2 for ZoneDetection
-        private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
+        //private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
 
         /***************************
          * TORBOTS SPECIFIC VARIABLES
@@ -63,7 +63,7 @@ public class RobotContainer {
         // Turrets for testing
         private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2, 
                         Constants.TurretConstants.encoderCanID2, Constants.TurretConstants.TurretOffset1, 
-                        drivetrain, m_zoneDetection, TURRENT_SIDE.LEFT);
+                        drivetrain, null, TURRENT_SIDE.LEFT);
         //private final Turret rightTurret = new Turret(Constants.TurretConstants.TurretCanId1,
         //                Constants.TurretConstants.encoderCanID2 ,Constants.TurretConstants.TurretOffset1, 
         //                drivetrain, m_zoneDetection, TURRENT_SIDE.RIGHT);
@@ -157,12 +157,12 @@ public class RobotContainer {
 
                 // Shooter idle commands
                 
-                leftShooter.setDefaultCommand(
+                /*leftShooter.setDefaultCommand(
                 Commands.run(() ->
                 leftShooter.LeftSpin(Constants.ShooterConstants.IdleSpeed), leftShooter));
                 rightShooter.setDefaultCommand(
                 Commands.run(() ->
-                rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter));
+                rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed), rightShooter));*/
                 
 
                 // Reset the field-centric heading on start button press (right middle button)
@@ -175,22 +175,18 @@ public class RobotContainer {
                 // ********************FUNCTIONS For Testing*****************************/
 
                 // TODO: Remove this manual binding in the future.
-                driverController.b().whileTrue(m_hopper.runHopperCommand());
                 driverController.a().onTrue(Commands.runOnce(() -> m_intake.runIntake(drivetrain.getState().Speeds)))
                                 .onFalse(Commands.runOnce(() -> m_intake.stopIntake()));
 
-                /*ParallelCommandGroup shootGroup = new ParallelCommandGroup(
-                                Commands.run(() -> leftShooter.LeftSpin(Constants.ShooterConstants.IdleSpeed),
-                                                leftShooter),
-                                Commands.run(() -> rightShooter.RightSpin(Constants.ShooterConstants.IdleSpeed),
-                                                rightShooter),
+                ParallelCommandGroup shootGroup = new ParallelCommandGroup(
+                                
                                 m_hopper.runShootCommand());
 
                 ParallelCommandGroup stopShooters = new ParallelCommandGroup(
                                 Commands.run(() -> leftShooter.LeftSpin(0), leftShooter),
-                                Commands.run(() -> rightShooter.RightSpin(0)));*/
+                                Commands.run(() -> rightShooter.RightSpin(0)));
 
-                //driverController.rightTrigger(0.5f).whileTrue(shootGroup).onFalse(stopShooters);
+                driverController.rightTrigger(0.5f).whileTrue(shootGroup).onFalse(stopShooters);
 
                 // Click to drop intake
                 driverController.rightBumper().onTrue(m_intake.runDeployCommand());

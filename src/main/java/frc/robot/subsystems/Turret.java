@@ -2,9 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
-import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.PositionVoltage;
 
 import edu.wpi.first.math.MathUtil;
@@ -89,33 +87,10 @@ public class Turret extends SubsystemBase {
         turrentPID = new PIDController(Constants.TurretConstants.kP, Constants.TurretConstants.kI,
                 Constants.TurretConstants.kD);
         turrentPID.disableContinuousInput();
-        SmartDashboard.putNumber("Turret/PD", 0);
-        SmartDashboard.putNumber("Turret/ErrorPercent", 0);
     }
 
     @Override
     public void periodic() {
-
-        PDTest = SmartDashboard.getNumber("Turret/PD", 0);
-        turrentPID.setPID(PDTest, 0, 0);
-
-        if (m_side == TURRENT_SIDE.LEFT) {
-            SmartDashboard.putNumber("Left Encoder", encoder.getPosition().getValueAsDouble());
-        }
-
-        boolean usePosition = SmartDashboard.getBoolean("Turret/UseManualPosition", false);
-        if (usePosition) {
-            double leftAngle = SmartDashboard.getNumber("Turret/ManualAngleLeft", 0.0);
-            //double rightAngle = SmartDashboard.getNumber("Turret/ManualAngleRight", 0.0);
-            setTargetAngle(leftAngle);
-            // rightTurret.setTargetAngle(rightAngle);
-        } else {
-            double leftPower = SmartDashboard.getNumber("Turret/ManualPowerLeft", 0.0);
-            //double rightPower = SmartDashboard.getNumber("Turret/ManualPowerRight", 0.0);
-            setPower((float) leftPower);
-            // rightTurret.setPower((float) rightPower);
-        }
-
         // --- 1. Sensors & State ---
         // Get current position in Rotations
         double currentMotorRotations = TurretMotor.getPosition().getValueAsDouble();
@@ -126,9 +101,6 @@ public class Turret extends SubsystemBase {
         double robotHeadingDegrees = (DriveTrain != null) ? DriveTrain.getState().Pose.getRotation().getDegrees() : 0.0;
         double currentTurretFieldDegrees = robotHeadingDegrees +
                 currentTurretDegrees; // Approximate field heading
-
-        SmartDashboard.putNumber("Turret/Field Angle", currentTurretFieldDegrees);
-        SmartDashboard.putNumber("Turret/Relative Angle", currentTurretDegrees);
 
         // --- 2. Determine Target Pose ---
         var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
@@ -185,19 +157,13 @@ public class Turret extends SubsystemBase {
             Translation2d delta = targetPose.getTranslation().minus(turretFieldPose.getTranslation());
             double targetFieldDegrees = delta.getAngle().getDegrees();
 
-            SmartDashboard.putNumber("Turret/Target Field Angle", targetFieldDegrees);
-
             // RobotHeading + TurretRelative = TargetField
             // TurretRelative = TargetField - RobotHeading
             targetRelativeDegrees = targetFieldDegrees - robotHeadingDegrees;
         } else {
             // Idle / Forward
             targetRelativeDegrees = 0.0;
-            SmartDashboard.putNumber("Turret/Target Field Angle", robotHeadingDegrees);
         }
-
-        SmartDashboard.putBoolean("Turret/Tracking", shouldTrack);
-        SmartDashboard.putNumber("Turret/Target Relative", targetRelativeDegrees);
 
         // --- 4. Closed Loop Control ---
 
@@ -205,33 +171,27 @@ public class Turret extends SubsystemBase {
         // 90 for initial testing)
         double constrainedTargetDegrees = MathUtil.clamp(targetRelativeDegrees, TurretConstants.MinAngle,
                 TurretConstants.MaxAngle);
-
-        SmartDashboard.putNumber("Turret/Target Constrained",
-                constrainedTargetDegrees);
-        SmartDashboard.putNumber("Turret/Error", constrainedTargetDegrees -
-                currentTurretDegrees);
-        getErrorInPer();
-
-        // Convert Target Degrees -> Motor Rotations
-        // Rotations = Degrees / 360
-        // Motor Rotations = Turret Rotations / Gear Ratio
-        double targetRotations = (constrainedTargetDegrees / 360.0) /
-                TurretConstants.TurretGearRatio;
+      
+        SmartDashboard.putNumber("Turret/Turret Angle", targetRelativeDegrees);
 
         // Apply to Motor
-        // TurretMotor.setControl(m_request.withPosition(targetRotations));
+        //setTargetAngle(constrainedTargetDegrees);
     }
 
     public void setPower(float speed) {
         TurretMotor.set(speed);
     }
 
-    public void setTargetAngle(double targetRotations) {
-        double motoroutput = turrentPID.calculate(encoder.getPosition().getValueAsDouble(), targetRotations);
+    public void setTargetAngle(double targetAngle) {
+        if(Math.abs(targetAngle) > 90)
+            return;
+
+        //convert to rotations
+        double rotations = targetAngle / 45;
+
+        double motoroutput = turrentPID.calculate(encoder.getPosition().getValueAsDouble(), rotations);
 
         motoroutput = MathUtil.clamp(motoroutput, -0.75, 75);
-
-        SmartDashboard.putNumber("PID Result", motoroutput);
 
         TurretMotor.set(motoroutput);
     }
