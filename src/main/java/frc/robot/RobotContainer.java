@@ -134,12 +134,10 @@ public class RobotContainer {
                 driverController.a().onTrue(Commands.runOnce(() -> m_intake.runIntake(drivetrain.getState().Speeds)))
                                 .onFalse(Commands.runOnce(() -> m_intake.stopIntake()));
 
-                ParallelCommandGroup shootGroup = new ParallelCommandGroup(
-                                Commands.run(() -> leftShooter.LeftSpin(12)),
-                                Commands.run(() -> rightShooter.RightSpin(12)),
-                                m_hopper.runShootCommand());
+                // Shoot sequence using our new target RPS. (Let's say 75 RPS for testing)
+                Command shootSequence = getShootCommand(75.0);
 
-                driverController.rightTrigger(0.5f).whileTrue(shootGroup);
+                driverController.rightTrigger(0.5f).whileTrue(shootSequence);
 
                 // Click to drop intake
                 driverController.rightBumper().onTrue(m_intake.runDeployCommand());
@@ -150,19 +148,22 @@ public class RobotContainer {
                 // TODO: Test command to deploy and run intake wheels simultaneously
                 // driverController.leftTrigger().whileTrue(m_intake.runDeployAndIntakeCommand(()
                 // -> drivetrain.getState().Speeds));
-
-                // --- Turret Testing (D-Pad) ---
-                // Left Turret: D-Pad Left/Right
-                // driverController.povLeft().onTrue(rightTurret.ManualTurnLeft()).onFalse(rightTurret.StopTurret());
-                // driverController.povRight().onTrue(rightTurret.ManualTurnRight()).onFalse(rightTurret.StopTurret());
-
-                // Right Turret: D-Pad Up/Down
-                // driverController.povUp().onTrue(leftTurret.ManualTurnLeft()).onFalse(leftTurret.StopTurret());
-                // driverController.povDown().onTrue(leftTurret.ManualTurnRight()).onFalse(leftTurret.StopTurret());
         }
 
         public Command getAutonomousCommand() {
                 return autoChooser.getSelected();
+        }
+
+        public Command getShootCommand(double targetRPS) {
+                return Commands.parallel(
+                                Commands.run(() -> {
+                                        leftShooter.setSpeed(targetRPS);
+                                        rightShooter.setSpeed(targetRPS);
+                                }, leftShooter, rightShooter),
+                                Commands.sequence(
+                                                Commands.waitUntil(() -> leftShooter.isAtSpeed()
+                                                                && rightShooter.isAtSpeed()),
+                                                m_hopper.runShootCommand()));
         }
 
         public void testPeriodic() {

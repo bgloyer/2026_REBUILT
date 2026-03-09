@@ -56,14 +56,16 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setSpeed(double rps) {
+        shooterspeed = rps;
         double rpm = rps * 60.0;
-        m_pidController.setReference(rpm, ControlType.kVelocity);
+        m_pidController.setSetpoint(rpm, ControlType.kVelocity);
     }
 
     public void Spin(double speedMeasurement) {
         // SparkMax expects RPM, so if RPS is given, convert to RPM
+        shooterspeed = speedMeasurement;
         double rpm = speedMeasurement * 60.0;
-        m_pidController.setReference(rpm, ControlType.kVelocity);
+        m_pidController.setSetpoint(rpm, ControlType.kVelocity);
     }
 
     public void Spin() {
