@@ -5,12 +5,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
-
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,68 +15,55 @@ import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
     private SparkMax shooterWheel1, shooterWheel2;
-    private SparkClosedLoopController pidController1;
-    private Hood m_hood;
-    private Turret m_turret;
-    private Hopper m_hopper;
+    private SparkClosedLoopController m_pidController;
+
+    public enum SHOOTER_SIDE {
+        RIGHT, LEFT
+    };
+
+    protected SHOOTER_SIDE m_side;
 
     private double shooterspeed = 60.0; // Default to 60 RPS
 
-    public Shooter(int shooterID1, int shooterID2, Hopper hopper) {
-        m_hopper = hopper;
-
-        shooterWheel1 = new SparkMax(shooterID1, MotorType.kBrushless);
-        shooterWheel2 = new SparkMax(shooterID2, MotorType.kBrushless);
-    }
-
-    public Shooter(int shooterID1, int shooterID2, int hoodID1, int hoodID2, int turretID,
-            edu.wpi.first.math.geometry.Translation2d turretOffset, CommandSwerveDrivetrain drivetrain,
-            ZoneDetection zoneDetection) {
-        //m_hood = new Hood(hoodID1, hoodID2);
-        //m_turret = new Turret(turretID, turretOffset, drivetrain, zoneDetection);
-
+    public Shooter(int shooterID1, int shooterID2, SHOOTER_SIDE side) {
+        m_side = side;
         shooterWheel1 = new SparkMax(shooterID1, MotorType.kBrushless);
         shooterWheel2 = new SparkMax(shooterID2, MotorType.kBrushless);
 
-        SparkMaxConfig config = new SparkMaxConfig();
+        SparkMaxConfig config1 = new SparkMaxConfig();
         EncoderConfig encoderConfig = new EncoderConfig();
 
-        encoderConfig.velocityConversionFactor(1);
-        
-        config.encoder.apply(encoderConfig);
-        shooterWheel1.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        shooterWheel2.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        encoderConfig.velocityConversionFactor(1); // Native RPM
+        config1.encoder.apply(encoderConfig);
 
-        // shooterWheel1.configure(new SparkBaseConfig().ap,
-        // com.revrobotics.ResetMode.kNoResetSafeParameters,
-        // com.revrobotics.PersistMode.kNoPersistParameters);
+        config1.closedLoop.pid(ShooterConstants.kP, 0, 0);
+        config1.closedLoop.velocityFF(ShooterConstants.kV);
+        config1.smartCurrentLimit((int) ShooterConstants.CurrentLimit);
 
-        /*
-         * pidController1 = shooterWheel1.getClosedLoopController();
-         * pidController2 = shooterWheel2.getClosedLoopController();
-         * 
-         * SparkMaxConfig config1 = new SparkMaxConfig();
-         * config1.closedLoop.pid(ShooterConstants.kP, 0, 0, ClosedLoopSlot.kSlot0);
-         * config1.closedLoop.velocityFF(ShooterConstants.kV, ClosedLoopSlot.kSlot0);
-         * config1.smartCurrentLimit((int)ShooterConstants.CurrentLimit);
-         * 
-         * SparkMaxConfig config2 = new SparkMaxConfig();
-         * config2.apply(config1);
-         * config2.follow(shooterWheel1, true); // Follow the first motor, inverted
-         * 
-         * shooterWheel1.configure(config1, ResetMode.kResetSafeParameters,
-         * PersistMode.kPersistParameters);
-         * shooterWheel2.configure(config2, ResetMode.kResetSafeParameters,
-         * PersistMode.kPersistParameters);
-         * 
-         * SmartDashboard.putNumber("Shooter Speed", 60.0);
-         */
+        SparkMaxConfig config2 = new SparkMaxConfig();
+        config2.apply(config1);
+
+        if (m_side == SHOOTER_SIDE.RIGHT) {
+            config2.follow(shooterWheel1, true); // Invert follower for right side
+        } else {
+            config2.follow(shooterWheel1, false); // Keep same direction for left side
+        }
+
+        shooterWheel1.configure(config1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        shooterWheel2.configure(config2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        m_pidController = shooterWheel1.getClosedLoopController();
+    }
+
+    public void setSpeed(double rps) {
+        double rpm = rps * 60.0;
+        m_pidController.setReference(rpm, ControlType.kVelocity);
     }
 
     public void Spin(double speedMeasurement) {
         // SparkMax expects RPM, so if RPS is given, convert to RPM
         double rpm = speedMeasurement * 60.0;
-        pidController1.setSetpoint(rpm, ControlType.kVelocity);
+        m_pidController.setReference(rpm, ControlType.kVelocity);
     }
 
     public void Spin() {
@@ -94,24 +78,14 @@ public class Shooter extends SubsystemBase {
         return run(this::Spin).finallyDo(interrupted -> Stop());
     }
 
-    /*
-     * public Command runIdleCommand() {
-     * return run(() -> DumbSpin(0.5));
-     * }
-     */
-
-    public void RightSpin(double speed) {
-        shooterWheel1.set(speed);
-        shooterWheel2.set(-speed);
-
-        SmartDashboard.putNumber("Right Shooter", shooterWheel1.getEncoder().getVelocity());
+    public void RightSpin(double voltage) {
+        shooterWheel1.setVoltage(voltage);
+        shooterWheel2.setVoltage(-voltage);
     }
 
-    public void LeftSpin(double speed) {
-        shooterWheel1.set(speed);
-        shooterWheel2.set(speed);
-
-        SmartDashboard.putNumber("Left Shooter", shooterWheel2.getEncoder().getVelocity());
+    public void LeftSpin(double voltage) {
+        shooterWheel1.setVoltage(voltage);
+        shooterWheel2.setVoltage(voltage);
     }
 
     public boolean isAtSpeed() {
@@ -121,21 +95,13 @@ public class Shooter extends SubsystemBase {
         return Math.abs(currentSpeedRps - shooterspeed) <= (Math.abs(shooterspeed) * 0.05);
     }
 
-    public Hood getHood() {
-        return m_hood;
-    }
-
-    public Turret getTurret() {
-        return m_turret;
-    }
-
     @Override
     public void periodic() {
         super.periodic();
 
-        // SmartDashboard.putNumber("Shooter/Wheel1 Speed",
-        // shooterWheel1.getEncoder().getVelocity());
-        // SmartDashboard.putNumber("Shooter/Wheel2 Speed",
-        // shooterWheel2.getEncoder().getVelocity());
+        SmartDashboard.putNumber("Shooter " + m_side.name() + "/Wheel1 Speed",
+                shooterWheel1.getEncoder().getVelocity());
+        SmartDashboard.putNumber("Shooter " + m_side.name() + "/Wheel2 Speed",
+                shooterWheel2.getEncoder().getVelocity());
     }
 }

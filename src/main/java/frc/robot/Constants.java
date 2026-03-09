@@ -17,23 +17,23 @@ public final class Constants {
 
     public static final class ClimberConstants {
         public static final Pose2d lowerClimbPosition = new Pose2d(1.066, 2.782, Rotation2d.fromDegrees(90));
-        
+
         public static final int ClimberCanId = 30;
         public static final int ClimberDateId = 31; // CANrange
 
-        public static final double kP = 0.1; 
+        public static final double kP = 0.1;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
-        
+
         // Mechanical Constants
         public static final double ClimberGearRatio = 12.0; // Example: 12:1
         public static final double ClimberSpoolDiameter = 0.0508; // Example: 2 inches in meters
-        
+
         // Climber Heights in Meters
         public static final double L0 = 0.0;
         public static final double L1 = 0.30; // ~1 foot
         public static final double L2 = 0.60; // ~2 feet
-        public static final double L3 = 1.0;  // ~3.3 feet
+        public static final double L3 = 1.0; // ~3.3 feet
         public static final double Tolerance = 0.02; // 2cm tolerance
         public static final double SoftLimitBuffer = 0.05;
     }
@@ -41,14 +41,14 @@ public final class Constants {
     public static final class HopperConstants {
         public static final int FlopperCanID = 8;
         public static final int TowerCanID = 9;
-        
+
         public static final int CanRangeID1 = 4;
         public static final int CanRangeID2 = 5;
         // Interior space is ~10.25 inches (260mm).
         public static final double LaserMinDistance = 200.0;
 
         public static final double HopperFeedSpeed = 0.9;
-        
+
         public static final int HopperCurrentLimit = 40;
         public static final double SplitterCurrentLimit = 30.0;
     }
@@ -70,7 +70,7 @@ public final class Constants {
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kV = 0.10; // ~0.1V per RPS
-        
+
         public static final double RollerCurrentLimit = 40.0;
 
         // Intake Deploy (Rack & Pinion)
@@ -78,15 +78,15 @@ public final class Constants {
         public static final double kDeployP = 1.5;
         public static final double kDeployI = 0.0;
         public static final double kDeployD = 0.0;
-        
+
         public static final double DeployCurrentLimit = 30.0;
-        
+
         // Deploy Positions in Rotations (Placeholder)
         public static final double DeployPosition = 30.0; // Fully Extended
-        public static final double RetractPosition = 0.0;  // Fully Retracted (Home)
+        public static final double RetractPosition = 0.0; // Fully Retracted (Home)
         public static final double DeployTolerance = 0.5;
     }
-    
+
     public static final class HoodConstants {
         public static final int HoodCanId1 = 11;
         public static final int HoodCanId2 = 21;
@@ -97,25 +97,27 @@ public final class Constants {
     }
 
     public static final class ShooterConstants {
-        public static final int ShooterCanId1 = 29;//left
+        public static final int ShooterCanId1 = 29;// left
         public static final int ShooterCanId2 = 28;
 
-        public static final int ShooterCanId3 = 18;//right
+        public static final int ShooterCanId3 = 18;// right
         public static final int ShooterCanId4 = 19;
 
         public static final double kP = 0.11;
         public static final double kV = 0.12;
         public static final double CurrentLimit = 80.0;
-        
-        public static final double IdleSpeed = 0.9f; //Need to find control speed, currently just set to voltage
+
+        public static final double IdleSpeed = 0.5f * 12; // Need to find control speed, currently just set to voltage
     }
 
     public static final class TurretConstants {
-        public static final int TurretCanId1 = 12; //right 
-        public static final int TurretCanId2 = 22; //left
+        public static final int TurretCanId1 = 12; // right
+        public static final int TurretCanId2 = 22; // left
 
-        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset1 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(-8.15)); //left
-        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(Units.inchesToMeters(-6.24), Units.inchesToMeters(8.15)); //right
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset1 = new edu.wpi.first.math.geometry.Translation2d(
+                Units.inchesToMeters(-6.24), Units.inchesToMeters(-8.15)); // left
+        public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(
+                Units.inchesToMeters(-6.24), Units.inchesToMeters(8.15)); // right
 
         public static final int encoderCanID1 = 2;
         public static final int encoderCanID2 = 3;
@@ -123,15 +125,20 @@ public final class Constants {
         public static final double kP = 0.3d;
         public static final double kI = 0.0d;
         public static final double kD = 0.0d;
-        //public static final double kTolerance = 0.0; // Degrees
-        
+        // public static final double kTolerance = 0.0; // Degrees
+
         public static final double CurrentLimit = 30.0;
 
         // Gear Ratio: 240/24 = 10:1 reduction
         public static final double TurretGearRatio = 1f / 8f;
 
         public static final double MinAngle = -90;
-        public static final double MaxAngle = 90; //need to convert to angle and eventually use radians        
+        public static final double MaxAngle = 90; // need to convert to angle and eventually use radians
+
+        // Offset for the absolute CANcoder to treat its starting valid position as 0
+        // degrees.
+        // Measured in motor rotations. (45 degrees = 1 rotation).
+        public static final double TurretAngleOffset = 0.0;
 
     }
 
