@@ -138,6 +138,9 @@ public class Turret extends SubsystemBase {
             // TurretRelative = TargetField - RobotHeading
             double targetRelativeDegrees = targetFieldDegrees - robotHeadingDegrees;
 
+            // Wrap the angle to handle the -180/180 degree boundary sign flip
+            targetRelativeDegrees = MathUtil.inputModulus(targetRelativeDegrees, -180.0, 180.0);
+
             // Optimize the target angle to fit within the valid range of the Turret (-90 to
             // 90 for initial testing)
             double constrainedTargetDegrees = MathUtil.clamp(targetRelativeDegrees, TurretConstants.MinAngle,
@@ -173,7 +176,7 @@ public class Turret extends SubsystemBase {
 
         motoroutput = MathUtil.clamp(motoroutput, -0.75, 75);
 
-        //TurretMotor.set(motoroutput);
+        // TurretMotor.set(motoroutput);
     }
 
     /**

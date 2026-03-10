@@ -76,13 +76,21 @@ public class RobotContainer {
         // private final Climber m_climber = new Climber();
 
         private final SendableChooser<Command> autoChooser;
+        private final SendableChooser<Pose2d> startingPoseChooser = new SendableChooser<>();
 
         public RobotContainer() {
                 configureNamedCommands();
                 configureBindings();
 
-                // setting our inital pose
-                drivetrain.resetPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(-90)));
+                // Setup the starting pose chooser for easy testing
+                startingPoseChooser.setDefaultOption("Blue Starting Zone",
+                                new Pose2d(new Translation2d(2.0, 4.03), Rotation2d.fromDegrees(0)));
+                startingPoseChooser.addOption("Red Starting Zone",
+                                new Pose2d(new Translation2d(14.54, 4.03), Rotation2d.fromDegrees(180)));
+                SmartDashboard.putData("Starting Pose Selection", startingPoseChooser);
+
+                // setting our inital pose by default to blue
+                drivetrain.resetPose(startingPoseChooser.getSelected());
 
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto selection", autoChooser);
@@ -114,6 +122,8 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
+                drivetrain.registerTelemetry(logger::telemeterize);
+
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
                 drivetrain.setDefaultCommand(
@@ -133,23 +143,23 @@ public class RobotContainer {
                                 // negative X (left)
                                 ));
 
+                // ******************** Default Commands *****************************/
                 // Shooter idle commands (2000 RPM ≈ 33.33 RPS)
                 leftShooter.setDefaultCommand(leftShooter.run(() -> leftShooter.Spin(33.33)));
                 rightShooter.setDefaultCommand(rightShooter.run(() -> rightShooter.Spin(33.33)));
 
+                // ********************WORKING FUNCTIONS *****************************/
                 // Reset the field-centric heading on start button press (right middle button)
                 driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-                drivetrain.registerTelemetry(logger::telemeterize);
+                // Click to drop intake
+                driverController.rightBumper()
+                                .onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
 
-                // ********************WORKING FUNCTIONS *****************************/
+                // Click to retract intake
+                driverController.leftBumper().onTrue(m_intake.runRetractCommand());
 
                 // ********************FUNCTIONS For Testing*****************************/
-
-                // TODO: Remove this manual binding in the future.
-                driverController.a().onTrue(Commands.runOnce(() -> m_intake.runIntake(drivetrain.getState().Speeds)))
-                                .onFalse(Commands.runOnce(() -> m_intake.stopIntake()));
-
                 // Active shooting commands (3500 RPM ≈ 58.33 RPS)
                 ParallelCommandGroup shootGroup = new ParallelCommandGroup(
                                 Commands.run(() -> leftShooter.Spin(58.33), leftShooter),
@@ -159,12 +169,10 @@ public class RobotContainer {
 
                 driverController.rightTrigger(0.5f).whileTrue(shootGroup);
 
-                // Click to drop intake
-                driverController.rightBumper()
-                                .onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
-
-                // Click to retract intake
-                driverController.leftBumper().onTrue(m_intake.runRetractCommand());
+                // Reset the odometry to the chosen starting pose on D-PAD UP press
+                driverController.povUp().onTrue(drivetrain.runOnce(() -> {
+                        drivetrain.resetPose(startingPoseChooser.getSelected());
+                }));
         }
 
         public Command getAutonomousCommand() {
