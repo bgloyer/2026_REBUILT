@@ -154,7 +154,8 @@ public class RobotContainer {
                 ParallelCommandGroup shootGroup = new ParallelCommandGroup(
                                 Commands.run(() -> leftShooter.Spin(58.33), leftShooter),
                                 Commands.run(() -> rightShooter.Spin(58.33), rightShooter),
-                                m_hopper.runShootCommand());
+                                Commands.waitUntil(() -> leftShooter.isAtSpeed() && rightShooter.isAtSpeed())
+                                                .andThen(m_hopper.runShootCommand()));
 
                 driverController.rightTrigger(0.5f).whileTrue(shootGroup);
 
