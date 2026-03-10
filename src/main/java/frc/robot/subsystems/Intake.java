@@ -184,6 +184,42 @@ public class Intake extends SubsystemBase {
     }
 
     /**
+     * Auto-Homing Routine.
+     * Starts retracting slowly using voltage. If periodic() detects a stall
+     * condition,
+     * it zeroes the encoder and sets target back to retracted.
+     */
+    public Command autoHome() {
+        return run(() -> deployMotor.setVoltage(-3.0))
+                .until(() -> {
+                    double current = Math.abs(deployMotor.getStatorCurrent().getValueAsDouble());
+                    double velocity = deployMotor.getVelocity().getValueAsDouble();
+                    return current > (IntakeConstants.DeployCurrentLimit - 10.0) && Math.abs(velocity) < 0.1;
+                })
+                .finallyDo((interrupted) -> {
+                    deployMotor.setPosition(0);
+                    retract();
+                });
+    }
+
+    // Manual Overrides
+    public Command forceDeploy() {
+        return runOnce(() -> {
+            deployMotor.setPosition(IntakeConstants.DeployPosition);
+            m_position = INTAKE_POSITION.DEPLOYED;
+            m_deployTarget = null;
+        });
+    }
+
+    public Command forceRetract() {
+        return runOnce(() -> {
+            deployMotor.setPosition(IntakeConstants.RetractPosition);
+            m_position = INTAKE_POSITION.RETRACTED;
+            m_deployTarget = null;
+        });
+    }
+
+    /**
      * Deploys the intake and runs the rollers.
      * When the command ends (e.g., button released), the rollers stop and the
      * intake retracts.

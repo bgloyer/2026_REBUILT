@@ -45,16 +45,23 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(MaxSpeed);
         private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController overrideController = new CommandXboxController(1);
+        /***************************
+         * CORE SUBSYSTEMS
+         ******************************/
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
-        // Use the drivetrain's Pigeon2 for ZoneDetection
         private final ZoneDetection m_zoneDetection = new ZoneDetection(drivetrain, drivetrain.getPigeon2());
 
         /***************************
-         * TORBOTS SPECIFIC VARIABLES
+         * INTAKE & INDEXING
          ******************************/
         private final Intake m_intake = new Intake();
         private final Hopper m_hopper = new Hopper();
+        // private final Climber m_climber = new Climber();
+
+        /***************************
+         * SHOOTER & TARGETING
+         ******************************/
         private final Shooter leftShooter = new Shooter(Constants.ShooterConstants.ShooterCanId1,
                         Constants.ShooterConstants.ShooterCanId2, SHOOTER_SIDE.LEFT);
         private final Shooter rightShooter = new Shooter(Constants.ShooterConstants.ShooterCanId3,
@@ -70,10 +77,8 @@ public class RobotContainer {
         // ,Constants.TurretConstants.TurretOffset1,
         // drivetrain, m_zoneDetection, TURRENT_SIDE.RIGHT);
 
-        private final Hood rightHood = new Hood(Constants.HoodConstants.HoodCanId1);
-        private final Hood leftHood = new Hood(Constants.HoodConstants.HoodCanId2);
-
-        // private final Climber m_climber = new Climber();
+        private final Hood rightHood = new Hood(Constants.HoodConstants.HoodCanId1, Hood.HOOD_SIDE.RIGHT);
+        private final Hood leftHood = new Hood(Constants.HoodConstants.HoodCanId2, Hood.HOOD_SIDE.LEFT);
 
         private final SendableChooser<Command> autoChooser;
         private final SendableChooser<Pose2d> startingPoseChooser = new SendableChooser<>();
@@ -94,27 +99,6 @@ public class RobotContainer {
 
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto selection", autoChooser);
-
-                // Turret manual testing inputs
-                SmartDashboard.putNumber("Turret/ManualPowerLeft", 0.0);
-                SmartDashboard.putNumber("Turret/ManualPowerRight", 0.0);
-                SmartDashboard.putNumber("Turret/ManualAngleLeft", 0.0);
-                SmartDashboard.putNumber("Turret/ManualAngleRight", 0.0);
-                SmartDashboard.putBoolean("Turret/UseManualPosition", false);
-
-                // Hood manual testing inputs
-                SmartDashboard.putNumber("Hood/ManualPowerLeft", 0.0);
-                SmartDashboard.putNumber("Hood/ManualPowerRight", 0.0);
-                SmartDashboard.putNumber("Hood/ManualAngleLeft", 0.0);
-                SmartDashboard.putNumber("Hood/ManualAngleRight", 0.0);
-                SmartDashboard.putBoolean("Hood/UseManualPosition", false);
-
-                // Shooter manual testing inputs
-                SmartDashboard.putNumber("Shooter/ManualPowerLeft", 0.0);
-                SmartDashboard.putNumber("Shooter/ManualPowerRight", 0.0);
-                SmartDashboard.putNumber("Shooter/ManualRPMMLeft", 0.0);
-                SmartDashboard.putNumber("Shooter/ManualRPMMRight", 0.0);
-                SmartDashboard.putBoolean("Shooter/UseManualRPM", false);
         }
 
         private void configureNamedCommands() {
@@ -173,6 +157,14 @@ public class RobotContainer {
                 driverController.povUp().onTrue(drivetrain.runOnce(() -> {
                         drivetrain.resetPose(startingPoseChooser.getSelected());
                 }));
+
+                // ******************** OVERRIDES *****************************/
+                // Manual encoder resets without touching PID voltages
+                overrideController.povUp().onTrue(m_intake.forceRetract());
+                overrideController.povDown().onTrue(m_intake.forceDeploy());
+
+                // Allow the co-driver to auto-home manually or in test mode
+                overrideController.start().onTrue(m_intake.autoHome());
         }
 
         public Command getAutonomousCommand() {
@@ -182,5 +174,4 @@ public class RobotContainer {
         public void testPeriodic() {
 
         }
-
 }

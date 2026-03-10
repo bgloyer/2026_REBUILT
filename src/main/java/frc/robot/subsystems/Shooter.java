@@ -36,7 +36,6 @@ public class Shooter extends SubsystemBase {
 
         // Basic PID configuration (Needs to be tuned)
         config1.closedLoop.pid(0.001, 0, 0);
-        config1.closedLoop.velocityFF(0.0001); // Approximate initial FF
 
         // Velocity filtering fix for Flywheels (From Chief Delphi)
         // Reduces phase lag from default 164ms down to ~5ms

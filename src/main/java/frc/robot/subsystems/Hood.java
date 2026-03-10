@@ -14,7 +14,14 @@ public class Hood extends SubsystemBase {
     private TalonFX hoodMain;
     private final PositionVoltage m_request = new PositionVoltage(0).withSlot(0);
 
-    public Hood(int hoodCanId) {
+    public enum HOOD_SIDE {
+        RIGHT, LEFT
+    };
+
+    protected HOOD_SIDE m_side;
+
+    public Hood(int hoodCanId, HOOD_SIDE side) {
+        m_side = side;
         hoodMain = new TalonFX(hoodCanId);
 
         var hoodConfig = new TalonFXConfiguration();
@@ -25,7 +32,7 @@ public class Hood extends SubsystemBase {
         hoodMain.getConfigurator().apply(hoodConfig);
         hoodMain.setPosition(0);
 
-        SmartDashboard.putNumber("Hood/Hood Angle", 0);
+        SmartDashboard.putNumber("Hood " + m_side.name() + "/Hood Angle", 0);
     }
 
     public Command ManualHoodUp() {
@@ -40,14 +47,9 @@ public class Hood extends SubsystemBase {
         return Commands.runOnce(() -> hoodMain.set(0));
     }
 
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("Hood/Current Angle", ConvertTicksToAngle(hoodMain.getPosition().getValueAsDouble()));
-    }
-
     public void setTargetAngle(double targetDegrees) {
         double ticks = ConvertDegreesToTicks(targetDegrees);
-        SmartDashboard.putNumber("Hood/Requested Ticks", ticks);
+        SmartDashboard.putNumber("Hood " + m_side.name() + "/Requested Ticks", ticks);
         hoodMain.setControl(m_request.withPosition(ticks));
     }
 
