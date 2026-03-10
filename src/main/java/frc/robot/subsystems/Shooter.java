@@ -4,6 +4,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -31,23 +32,9 @@ public class Shooter extends SubsystemBase {
         shooterWheel2 = new SparkMax(shooterID2, MotorType.kBrushless);
 
         SparkMaxConfig config1 = new SparkMaxConfig();
-        EncoderConfig encoderConfig = new EncoderConfig();
-
-        encoderConfig.velocityConversionFactor(1); // Native RPM
-        config1.encoder.apply(encoderConfig);
-
-        config1.closedLoop.pid(ShooterConstants.kP, 0, 0);
-        config1.closedLoop.velocityFF(ShooterConstants.kV);
-        config1.smartCurrentLimit((int) ShooterConstants.CurrentLimit);
-
+        config1.idleMode(IdleMode.kCoast);
         SparkMaxConfig config2 = new SparkMaxConfig();
         config2.apply(config1);
-
-        if (m_side == SHOOTER_SIDE.RIGHT) {
-            config2.follow(shooterWheel1, true); // Invert follower for right side
-        } else {
-            config2.follow(shooterWheel1, false); // Keep same direction for left side
-        }
 
         shooterWheel1.configure(config1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         shooterWheel2.configure(config2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -80,14 +67,12 @@ public class Shooter extends SubsystemBase {
         return run(this::Spin).finallyDo(interrupted -> Stop());
     }
 
-    public void RightSpin(double voltage) {
-        shooterWheel1.setVoltage(voltage);
-        shooterWheel2.setVoltage(-voltage);
-    }
+    public void SpinShooter(double speed) {
+        if(m_side == SHOOTER_SIDE.LEFT)
+            speed *= -1;
 
-    public void LeftSpin(double voltage) {
-        shooterWheel1.setVoltage(voltage);
-        shooterWheel2.setVoltage(voltage);
+        shooterWheel1.set(speed);
+        shooterWheel2.set(-speed);
     }
 
     public boolean isAtSpeed() {

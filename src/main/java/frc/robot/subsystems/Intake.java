@@ -90,10 +90,6 @@ public class Intake extends SubsystemBase {
                 SmartDashboard.putBoolean("Intake/Stalled", false);
             }
         }
-
-        SmartDashboard.putNumber("Intake/Intake Position", deployMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Intake/Deploy Current (Amps)",
-                Math.abs(deployMotor.getStatorCurrent().getValueAsDouble()));
     }
 
     public void setSpeed(double speed) {
@@ -179,11 +175,7 @@ public class Intake extends SubsystemBase {
      */
     public Command runDeployAndIntakeCommand(java.util.function.Supplier<ChassisSpeeds> speedSupplier) {
         return run(() -> runIntake(speedSupplier.get())) // Run intake rollers indefinitely
-                .beforeStarting(this::deploy) // Deploy when started
-                .finallyDo(interrupted -> {
-                    stopIntake(); // Stop rollers when finished
-                    retract(); // Retract when finished
-                });
+                .beforeStarting(this::deploy);
     }
 
     // Agitation: Helps push balls towards shooter / unjam

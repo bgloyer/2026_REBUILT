@@ -173,7 +173,7 @@ public class Turret extends SubsystemBase {
 
         motoroutput = MathUtil.clamp(motoroutput, -0.75, 75);
 
-        TurretMotor.set(motoroutput);
+        //TurretMotor.set(motoroutput);
     }
 
     /**
