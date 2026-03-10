@@ -61,12 +61,14 @@ public class RobotContainer {
                         Constants.ShooterConstants.ShooterCanId4, SHOOTER_SIDE.RIGHT);
 
         // Turrets for testing
-        private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2, 
-                        Constants.TurretConstants.encoderCanID2, Constants.TurretConstants.TurretOffset1, 
+        private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2,
+                        Constants.TurretConstants.encoderCanID2, Constants.TurretConstants.TurretOffset1,
                         drivetrain, m_zoneDetection, TURRENT_SIDE.LEFT);
-        //private final Turret rightTurret = new Turret(Constants.TurretConstants.TurretCanId1,
-        //                Constants.TurretConstants.encoderCanID2 ,Constants.TurretConstants.TurretOffset1, 
-        //                drivetrain, m_zoneDetection, TURRENT_SIDE.RIGHT);
+        // private final Turret rightTurret = new
+        // Turret(Constants.TurretConstants.TurretCanId1,
+        // Constants.TurretConstants.encoderCanID2
+        // ,Constants.TurretConstants.TurretOffset1,
+        // drivetrain, m_zoneDetection, TURRENT_SIDE.RIGHT);
 
         private final Hood rightHood = new Hood(Constants.HoodConstants.HoodCanId1);
         private final Hood leftHood = new Hood(Constants.HoodConstants.HoodCanId2);
@@ -108,7 +110,7 @@ public class RobotContainer {
         }
 
         private void configureNamedCommands() {
-                
+
         }
 
         private void configureBindings() {
@@ -131,7 +133,9 @@ public class RobotContainer {
                                 // negative X (left)
                                 ));
 
-                // Shooter idle commands                
+                // Shooter idle commands (2000 RPM ≈ 33.33 RPS)
+                leftShooter.setDefaultCommand(leftShooter.run(() -> leftShooter.Spin(33.33)));
+                rightShooter.setDefaultCommand(rightShooter.run(() -> rightShooter.Spin(33.33)));
 
                 // Reset the field-centric heading on start button press (right middle button)
                 driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
@@ -146,19 +150,17 @@ public class RobotContainer {
                 driverController.a().onTrue(Commands.runOnce(() -> m_intake.runIntake(drivetrain.getState().Speeds)))
                                 .onFalse(Commands.runOnce(() -> m_intake.stopIntake()));
 
+                // Active shooting commands (3500 RPM ≈ 58.33 RPS)
                 ParallelCommandGroup shootGroup = new ParallelCommandGroup(
-                                Commands.run(() -> leftShooter.SpinShooter(0.7)),
-                                Commands.run(() -> rightShooter.SpinShooter(0.7)),
+                                Commands.run(() -> leftShooter.Spin(58.33), leftShooter),
+                                Commands.run(() -> rightShooter.Spin(58.33), rightShooter),
                                 m_hopper.runShootCommand());
 
-                ParallelCommandGroup stopShooters = new ParallelCommandGroup(
-                                Commands.run(() -> leftShooter.SpinShooter(0.0)),
-                                Commands.run(() -> rightShooter.SpinShooter(0.0)));
-
-                driverController.rightTrigger(0.5f).whileTrue(shootGroup).onFalse(stopShooters);
+                driverController.rightTrigger(0.5f).whileTrue(shootGroup);
 
                 // Click to drop intake
-                driverController.rightBumper().onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
+                driverController.rightBumper()
+                                .onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
 
                 // Click to retract intake
                 driverController.leftBumper().onTrue(m_intake.runRetractCommand());
@@ -169,7 +171,7 @@ public class RobotContainer {
         }
 
         public void testPeriodic() {
-        
+
         }
 
 }

@@ -33,8 +33,18 @@ public class Shooter extends SubsystemBase {
 
         SparkMaxConfig config1 = new SparkMaxConfig();
         config1.idleMode(IdleMode.kCoast);
+
+        // Basic PID configuration (Needs to be tuned)
+        config1.closedLoop.pid(0.001, 0, 0);
+        config1.closedLoop.velocityFF(0.0001); // Approximate initial FF
+
+        // Velocity filtering fix for Flywheels (From Chief Delphi)
+        // Reduces phase lag from default 164ms down to ~5ms
+        config1.encoder.quadratureMeasurementPeriod(10).quadratureAverageDepth(2);
+
         SparkMaxConfig config2 = new SparkMaxConfig();
-        config2.apply(config1);
+        config2.apply(config1); // Inherit all limits, coastal, etc.
+        config2.follow(shooterWheel1, true); // Follow shooterWheel1 but inverted
 
         shooterWheel1.configure(config1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         shooterWheel2.configure(config2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -68,7 +78,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void SpinShooter(double speed) {
-        if(m_side == SHOOTER_SIDE.LEFT)
+        if (m_side == SHOOTER_SIDE.LEFT)
             speed *= -1;
 
         shooterWheel1.set(speed);

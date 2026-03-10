@@ -24,7 +24,10 @@ public class Intake extends SubsystemBase {
     private Double m_deployTarget = null;
     private final edu.wpi.first.wpilibj.Timer m_deployTimer = new edu.wpi.first.wpilibj.Timer();
 
-    private enum INTAKE_POSITION{ DEPLOYED, RETRACTED};
+    private enum INTAKE_POSITION {
+        DEPLOYED, RETRACTED
+    };
+
     private INTAKE_POSITION m_position;
 
     public Intake() {
@@ -79,9 +82,6 @@ public class Intake extends SubsystemBase {
                     Math.abs(velocity) < 0.1;
 
             if (isAtTarget || isStalled) {
-                SmartDashboard.putBoolean("Intake/Loop Running", false);
-                SmartDashboard.putBoolean("Intake/Stalled", isStalled);
-
                 // If it stalls while retracting, it hit the home position, so zero the encoder.
                 // This ensures repeated deployments remain accurate even if skipping teeth.
                 if (isStalled && m_deployTarget == IntakeConstants.RetractPosition) {
@@ -145,9 +145,8 @@ public class Intake extends SubsystemBase {
 
     // Deployment Methods
     public void deploy() {
-        if(m_position == INTAKE_POSITION.DEPLOYED)
+        if (m_position == INTAKE_POSITION.DEPLOYED)
             return;
-
 
         m_deployTarget = IntakeConstants.DeployPosition;
         m_deployTimer.restart();
@@ -156,20 +155,20 @@ public class Intake extends SubsystemBase {
 
     public void retract() {
         stopIntake();
-        
-        if(m_position == INTAKE_POSITION.RETRACTED)
+
+        if (m_position == INTAKE_POSITION.RETRACTED)
             return;
-        
+
         m_deployTarget = IntakeConstants.RetractPosition;
         m_deployTimer.restart();
         deployMotor.setControl(m_DeployRequest.withPosition(IntakeConstants.RetractPosition));
     }
 
     public void stopDeploy() {
-        if(m_deployTarget == IntakeConstants.DeployPosition) 
+        if (m_deployTarget == IntakeConstants.DeployPosition)
             m_position = INTAKE_POSITION.DEPLOYED;
-        
-        if(m_deployTarget == IntakeConstants.RetractPosition)
+
+        if (m_deployTarget == IntakeConstants.RetractPosition)
             m_position = INTAKE_POSITION.RETRACTED;
 
         m_deployTarget = null;
