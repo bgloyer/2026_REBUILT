@@ -34,6 +34,9 @@ public class Shooter extends SubsystemBase {
         SparkMaxConfig config1 = new SparkMaxConfig();
         config1.idleMode(IdleMode.kCoast);
 
+        // Invert the main motor if it's the left side
+        config1.inverted(m_side == SHOOTER_SIDE.LEFT);
+
         // Basic PID configuration (Needs to be tuned)
         config1.closedLoop.pid(0.001, 0, 0);
 
@@ -42,7 +45,7 @@ public class Shooter extends SubsystemBase {
         config1.encoder.quadratureMeasurementPeriod(10).quadratureAverageDepth(2);
 
         SparkMaxConfig config2 = new SparkMaxConfig();
-        config2.apply(config1); // Inherit all limits, coastal, etc.
+        config2.apply(config1); // Inherit all limits, coastal, inverted state, etc.
         config2.follow(shooterWheel1, true); // Follow shooterWheel1 but inverted
 
         shooterWheel1.configure(config1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -74,14 +77,6 @@ public class Shooter extends SubsystemBase {
 
     public Command runShooterCommand() {
         return run(this::Spin).finallyDo(interrupted -> Stop());
-    }
-
-    public void SpinShooter(double speed) {
-        if (m_side == SHOOTER_SIDE.LEFT)
-            speed *= -1;
-
-        shooterWheel1.set(speed);
-        shooterWheel2.set(-speed);
     }
 
     public boolean isAtSpeed() {

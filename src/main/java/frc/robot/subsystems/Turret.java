@@ -3,7 +3,6 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -134,6 +133,10 @@ public class Turret extends SubsystemBase {
             Translation2d delta = targetPose.getTranslation().minus(turretFieldPose.getTranslation());
             double targetFieldDegrees = delta.getAngle().getDegrees();
 
+            // Calculate distance to target (norm of the translation difference)
+            double distanceToTarget = delta.getNorm();
+            SmartDashboard.putNumber("Turret " + m_side.name() + "/Distance to Target (m)", distanceToTarget);
+
             // RobotHeading + TurretRelative = TargetField
             // TurretRelative = TargetField - RobotHeading
             double targetRelativeDegrees = targetFieldDegrees - robotHeadingDegrees;
@@ -153,6 +156,7 @@ public class Turret extends SubsystemBase {
             setTargetAngle(constrainedTargetDegrees);
         } else {
             // Idle / Forward
+            SmartDashboard.putNumber("Turret " + m_side.name() + "/Distance to Target (m)", 0.0);
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Target Relative Angle", 0.0);
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Constrained Angle", 0.0);
         }
