@@ -129,8 +129,8 @@ public class RobotContainer {
 
                 // ******************** Default Commands *****************************/
                 // Shooter idle commands (2000 RPM ≈ 33.33 RPS)
-                leftShooter.setDefaultCommand(leftShooter.run(() -> leftShooter.runIdle()));
-                rightShooter.setDefaultCommand(rightShooter.run(() -> rightShooter.runIdle()));
+                //leftShooter.setDefaultCommand(leftShooter.run(() -> leftShooter.runIdle()));
+                //rightShooter.setDefaultCommand(rightShooter.run(() -> rightShooter.runIdle()));
 
                 // ********************WORKING FUNCTIONS *****************************/
                 // Reset the field-centric heading on start button press (right middle button)

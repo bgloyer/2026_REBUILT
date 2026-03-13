@@ -8,8 +8,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants.TurretConstants;
@@ -24,6 +24,7 @@ public class Turret extends SubsystemBase {
     private CANcoder encoder;
 
     private PIDController turrentPID;
+    private double TargetRotations;
 
     public enum TURRENT_SIDE {
         RIGHT, LEFT
@@ -44,21 +45,7 @@ public class Turret extends SubsystemBase {
         encoder = new CANcoder(encoderID);
         TurretMotor = new TalonFX(turretCanId);
 
-        var turretConfig = new com.ctre.phoenix6.configs.TalonFXConfiguration();
-
-        // Tell the TalonFX to use the CANcoder for its position measurements
-        turretConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-        turretConfig.Feedback.FeedbackSensorSource = com.ctre.phoenix6.signals.FeedbackSensorSourceValue.RemoteCANcoder;
-
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2.0;
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2.0;
-
-        TurretMotor.getConfigurator().apply(turretConfig);
-
-        // We will no longer zero the encoder here because it is absolute.
-        // encoder.setPosition(0);
+        TargetRotations = encoder.getPosition().getValueAsDouble();
 
         turrentPID = new PIDController(Constants.TurretConstants.kP, Constants.TurretConstants.kI,
                 Constants.TurretConstants.kD);
@@ -67,18 +54,17 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+        EvaluateTurret();
+
         // --- 1. Sensors & State ---
         // Get current position in Rotations
         double currentMotorRotations = TurretMotor.getPosition().getValueAsDouble();
         // Convert to Degrees for Logic, factoring in the CANcoder's physical zero
         // offset
-        double absoluteRotations = currentMotorRotations - TurretConstants.TurretAngleOffset;
+        double absoluteRotations = currentMotorRotations - TurretConstants.TurrentRotationOffset;
         double currentTurretDegrees = rotationsToDegrees(absoluteRotations);
 
         double robotHeadingDegrees = (DriveTrain != null) ? DriveTrain.getState().Pose.getRotation().getDegrees() : 0.0;
-
-        SmartDashboard.putNumber("Turret " + m_side.name() + "/Current Angle Degrees", currentTurretDegrees);
-        SmartDashboard.putNumber("Turret " + m_side.name() + "/Robot Heading Degrees", robotHeadingDegrees);
 
         // --- 2. Determine Target Pose ---
         var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
@@ -128,7 +114,7 @@ public class Turret extends SubsystemBase {
         if (shouldTrack && targetPose != null) {
             Pose2d currentRobotPose = DriveTrain.getState().Pose;
             Pose2d turretFieldPose = currentRobotPose.transformBy(
-                    new edu.wpi.first.math.geometry.Transform2d(m_robotOffset, new Rotation2d()));
+                    new edu.wpi.first.math.geometry.Transform2d(m_robotOffset, new Rotation2d(Math.toRadians(180))));
 
             Translation2d delta = targetPose.getTranslation().minus(turretFieldPose.getTranslation());
             double targetFieldDegrees = delta.getAngle().getDegrees();
@@ -153,13 +139,29 @@ public class Turret extends SubsystemBase {
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Constrained Angle", constrainedTargetDegrees);
 
             // Apply to Motor
-            //setTargetAngle(constrainedTargetDegrees);
+            setTargetAngle(constrainedTargetDegrees);
         } else {
             // Idle / Forward
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Distance to Target (m)", 0.0);
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Target Relative Angle", 0.0);
             SmartDashboard.putNumber("Turret " + m_side.name() + "/Constrained Angle", 0.0);
         }
+    }
+
+    public void EvaluateTurret() {      
+        if(!DriverStation.isEnabled()) 
+            return;
+
+        double currentAbsRotations = encoder.getPosition().getValueAsDouble() - TurretConstants.TurrentRotationOffset;
+        double motoroutput = turrentPID.calculate(currentAbsRotations, TargetRotations);
+
+        SmartDashboard.putNumber("Turret " + m_side.name() + "/Encoder Position", currentAbsRotations);
+        SmartDashboard.putNumber("Turret " + m_side.name() + "/Target Angle", TargetRotations);
+        SmartDashboard.putNumber("Turret " + m_side.name() + "/Motor Output", motoroutput);
+
+        motoroutput = MathUtil.clamp(motoroutput, -0.75, 75);
+
+        TurretMotor.set(motoroutput);
     }
 
     /**
@@ -172,47 +174,7 @@ public class Turret extends SubsystemBase {
         if (Math.abs(targetAngle) > 90)
             return;
 
-        // convert to rotations
-        double rotations = targetAngle / 45;
-
-        double currentAbsRotations = encoder.getPosition().getValueAsDouble() - TurretConstants.TurretAngleOffset;
-        double motoroutput = turrentPID.calculate(currentAbsRotations, rotations);
-
-        motoroutput = MathUtil.clamp(motoroutput, -0.75, 75);
-
-        TurretMotor.set(motoroutput);
-    }
-
-    /**
-     * Returns a command that slowly turns the turret left manually.
-     */
-    public Command ManualTurnLeft() {
-        return runOnce(() -> TurretMotor.set(0.1f));
-    }
-
-    /**
-     * Returns a command that slowly turns the turret right manually.
-     */
-    public Command ManualTurnRight() {
-        return runOnce(() -> TurretMotor.set(-0.1f));
-    }
-
-    /**
-     * Returns a command that completely stops the turret motor.
-     */
-    public Command StopTurret() {
-        return runOnce(() -> TurretMotor.set(0));
-    }
-
-    /**
-     * Gets the current angle of the turret natively converted from the absolute
-     * encoder.
-     *
-     * @return Current turret angle in degrees.
-     */
-    public double GetCurrentAngle() {
-        double absoluteRotations = TurretMotor.getPosition().getValueAsDouble() - TurretConstants.TurretAngleOffset;
-        return rotationsToDegrees(absoluteRotations);
+        TargetRotations = DegreesToRotations(targetAngle);
     }
 
     /**
@@ -225,5 +187,9 @@ public class Turret extends SubsystemBase {
      */
     public double rotationsToDegrees(double rotations) {
         return rotations * 45.0;
+    }
+
+    public double DegreesToRotations(double degrees) {
+        return degrees / 45;
     }
 }
