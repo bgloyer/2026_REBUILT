@@ -146,8 +146,8 @@ public class Turret extends SubsystemBase {
     }
 
     public void EvaluateTurret() {      
-        if(!DriverStation.isEnabled()) 
-            return;
+        //if(!DriverStation.isEnabled()) 
+        //    return;
 
         
         double currentAbsRotations = getRelativeRotation();

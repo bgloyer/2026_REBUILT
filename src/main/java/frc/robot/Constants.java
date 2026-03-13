@@ -120,7 +120,7 @@ public final class Constants {
         public static final int encoderCanID1 = 2;
         public static final int encoderCanID2 = 3;
 
-        public static final double kP = 0.2d;
+        public static final double kP = 0.25d;
         public static final double kI = 0.0d;
         public static final double kD = 0.0d;
         // public static final double kTolerance = 0.0; // Degrees
@@ -136,7 +136,7 @@ public final class Constants {
         // Offset for the absolute CANcoder to treat its starting valid position as 0
         // degrees.
         // Measured in motor rotations. (45 degrees = 1 rotation).
-        public static final double TurrentRotationOffsetLeft = -0.31;
+        public static final double TurrentRotationOffsetLeft = -0.067;
         public static final double TurrentRotationOffsetRight = -0.44;
     }
 
