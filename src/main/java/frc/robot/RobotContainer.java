@@ -134,8 +134,7 @@ public class RobotContainer {
                 driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
                 // Click to drop intake
-                driverController.rightBumper()
-                                .onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
+                driverController.rightBumper().onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
 
                 // Click to retract intake
                 driverController.leftBumper().onTrue(m_intake.runRetractCommand());

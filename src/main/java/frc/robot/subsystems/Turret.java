@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants;
 
@@ -36,8 +35,6 @@ public class Turret extends SubsystemBase {
     };
 
     protected TURRET_SIDE m_side;
-    // y in inches: 159.1 = 4.0386 m
-    // x in inches: 182.1 = 4.6228 m
 
     public Turret(int turretCanId, int encoderID, edu.wpi.first.math.geometry.Translation2d turretOffset,
             SwerveDrivetrain<?, ?, ?> drivetrain, ZoneDetection zoneDetection, TURRET_SIDE side) {
@@ -48,7 +45,8 @@ public class Turret extends SubsystemBase {
         DriveTrain = drivetrain;
 
         // Pre-compute the transform here so we don't allocate it in periodic() every 20ms
-        m_turretOffsetTransform = new edu.wpi.first.math.geometry.Transform2d(m_robotOffset, new Rotation2d(Math.toRadians(180)));
+        // A Transform2d without a Rotational component simply translates the origin point
+        m_turretOffsetTransform = new edu.wpi.first.math.geometry.Transform2d(m_robotOffset, new Rotation2d());
 
         encoder = new CANcoder(encoderID);
         TurretMotor = new TalonFX(turretCanId);
@@ -83,8 +81,8 @@ public class Turret extends SubsystemBase {
         // --- 1. Sensors & State ---
         // Get current position in Rotations
         double currentMotorRotations = TurretMotor.getPosition().getValueAsDouble();
-        // Convert to Degrees for Logic, factoring in the CANcoder's physical zero
-        // offset
+        
+        // Convert to Degrees for Logic, factoring in the CANcoder's physical zero offset
         double absoluteRotations = getRelativeRotation();
         double currentTurretDegrees = rotationsToDegrees(absoluteRotations);
 
@@ -161,8 +159,8 @@ public class Turret extends SubsystemBase {
             // Wrap the angle to handle the -180/180 degree boundary sign flip
             targetRelativeDegrees = MathUtil.inputModulus(targetRelativeDegrees, -180.0, 180.0);
 
-            // Optimize the target angle to fit within the valid range of the Turret (-90 to
-            // 90 for initial testing)
+            // Optimize the target angle to fit within the valid range of the Turret 
+            // (-90 to 90 degrees based on Constants)
             double constrainedTargetDegrees = MathUtil.clamp(targetRelativeDegrees, TurretConstants.MinAngle,
                     TurretConstants.MaxAngle);
 
