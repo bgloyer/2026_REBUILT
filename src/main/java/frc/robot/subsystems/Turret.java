@@ -55,24 +55,30 @@ public class Turret extends SubsystemBase {
 
         // Configure the TalonFX to use the remote CANcoder for its position measurements
         // This makes the motor controllers internal soft limits use the CANcoder's rotations
-        turretConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-        turretConfig.Feedback.FeedbackSensorSource = com.ctre.phoenix6.signals.FeedbackSensorSourceValue.RemoteCANcoder;
+        // turretConfig.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
+        // turretConfig.Feedback.FeedbackSensorSource = com.ctre.phoenix6.signals.FeedbackSensorSourceValue.RemoteCANcoder;
 
         // Enable and map the Soft Limits 
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2.0;
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2.0;
+        // turretConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        // turretConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2.1;
+        // turretConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        // turretConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2.1;
 
         // Set Neutral Mode to Brake
         turretConfig.MotorOutput.NeutralMode = com.ctre.phoenix6.signals.NeutralModeValue.Brake;
 
         TurretMotor.getConfigurator().apply(turretConfig);
 
-        TargetRotations = encoder.getPosition().getValueAsDouble();
+        TargetRotations = getRelativeRotation();
 
-        turrentPID = new PIDController(Constants.TurretConstants.kP, Constants.TurretConstants.kI,
-                Constants.TurretConstants.kD);
+        if(side == TURRET_SIDE.LEFT) {
+            turrentPID = new PIDController(Constants.TurretConstants.LeftTurret.kP, Constants.TurretConstants.LeftTurret.kI,
+                Constants.TurretConstants.LeftTurret.kD);
+        } else {
+            turrentPID = new PIDController(Constants.TurretConstants.RightTurret.kP, Constants.TurretConstants.RightTurret.kI,
+                Constants.TurretConstants.RightTurret.kD);
+        }
+
         turrentPID.disableContinuousInput();
     }
 
@@ -143,7 +149,7 @@ public class Turret extends SubsystemBase {
         // --- 3. Calculate Desired Angle & Apply Control ---
         if (shouldTrack && targetPose != null) {
             Pose2d currentRobotPose = DriveTrain.getState().Pose;
-            Pose2d turretFieldPose = currentRobotPose.transformBy(m_turretOffsetTransform);
+            Pose2d turretFieldPose = currentRobotPose.transformBy(m_turretOffsetTransform);            
 
             Translation2d delta = targetPose.getTranslation().minus(turretFieldPose.getTranslation());
             double targetFieldDegrees = delta.getAngle().getDegrees();
@@ -180,7 +186,7 @@ public class Turret extends SubsystemBase {
         double currentAbsRotations = getRelativeRotation();
         double motoroutput = turrentPID.calculate(currentAbsRotations, TargetRotations);
 
-        SmartDashboard.putNumber("Turret " + m_side.name() + "/Encoder Position", encoder.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Turret " + m_side.name() + "/Encoder Position", getRelativeRotation());
         SmartDashboard.putNumber("Turret " + m_side.name() + "/Target Angle", TargetRotations);
         SmartDashboard.putNumber("Turret " + m_side.name() + "/Motor Output", motoroutput);
 

@@ -6,9 +6,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkBase.ControlType;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,6 +35,7 @@ public class Shooter extends SubsystemBase {
 
         SparkMaxConfig config1 = new SparkMaxConfig();
         config1.idleMode(IdleMode.kCoast);
+        config1.smartCurrentLimit(70);
 
         // Invert the main motor if it's the left side
         config1.inverted(m_side == SHOOTER_SIDE.LEFT);
@@ -104,7 +102,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void Spin() {
-        Spin(shooterspeed);
+        Spin(ShooterConstants.ShootSpeed);
     }
 
     public void Stop() {

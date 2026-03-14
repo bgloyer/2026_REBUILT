@@ -147,7 +147,7 @@ public class RobotContainer {
                                 Commands.waitUntil(() -> leftShooter.isAtSpeed() && rightShooter.isAtSpeed())
                                                 .andThen(m_hopper.runShootCommand()));
 
-                driverController.rightTrigger(0.5f).whileTrue(shootGroup);
+                driverController.rightTrigger(0.5f).whileTrue(m_hopper.runShootCommand());
 
                 // Reset the odometry to the chosen starting pose on D-PAD UP press
                 driverController.povUp().onTrue(drivetrain.runOnce(() -> {

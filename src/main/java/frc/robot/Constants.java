@@ -47,7 +47,7 @@ public final class Constants {
         // Interior space is ~10.25 inches (260mm).
         public static final double LaserMinDistance = 200.0;
 
-        public static final double HopperFeedSpeed = 0.9;
+        public static final double HopperFeedSpeed = 1.0;
 
         public static final int HopperCurrentLimit = 40;
         public static final double SplitterCurrentLimit = 30.0;
@@ -106,8 +106,8 @@ public final class Constants {
         public static final double kV = 0.0021; // Volts per RPM. Roughly 12V / 5600 RPM for a NEO/Vortex
 
         // Idle speed is now technically a target RPM
-        public static final double IdleSpeed = 500;
-        public static final double ShootSpeed = 3500;
+        public static final double IdleSpeed = 10;
+        public static final double ShootSpeed = 58;
     }
 
     public static final class TurretConstants {
@@ -122,9 +122,17 @@ public final class Constants {
         public static final int encoderCanID1 = 2;
         public static final int encoderCanID2 = 3;
 
-        public static final double kP = 0.25d;
-        public static final double kI = 0.0d;
-        public static final double kD = 0.0d;
+        public static final class LeftTurret {
+            public static final double kP = 0.25d;
+            public static final double kI = 0.0d;
+            public static final double kD = 0.0d;
+        }
+
+        public static final class RightTurret {
+            public static final double kP = 0.25d;
+            public static final double kI = 0.0d;
+            public static final double kD = 0.0d;
+        }
         // public static final double kTolerance = 0.0; // Degrees
 
         public static final double CurrentLimit = 30.0;
@@ -138,8 +146,8 @@ public final class Constants {
         // Offset for the absolute CANcoder to treat its starting valid position as 0
         // degrees.
         // Measured in motor rotations. (45 degrees = 1 rotation).
-        public static final double TurrentRotationOffsetLeft = -0.067;
-        public static final double TurrentRotationOffsetRight = -0.44;
+        public static final double TurrentRotationOffsetLeft = -0.0;
+        public static final double TurrentRotationOffsetRight = -0.27;
     }
 
     public static final class FieldConstants {
@@ -162,7 +170,7 @@ public final class Constants {
         // (Speaker).
         // Assuming X=4.62 is the specific target location:
         public static final edu.wpi.first.math.geometry.Pose2d BlueTargetPose = new edu.wpi.first.math.geometry.Pose2d(
-                4.6228, 4.0386, edu.wpi.first.math.geometry.Rotation2d.fromDegrees(0));
+                4.62, 4.035, edu.wpi.first.math.geometry.Rotation2d.fromDegrees(0));
 
         // Red Target (Mirrored / Rotated)
         // Standard Field Length approx 16.54m (54ft ish)
@@ -170,7 +178,7 @@ public final class Constants {
         // Red X = FieldLength - Blue X = 16.54 - 4.6228 = 11.9172
         // Red Y = FieldWidth - Blue Y = 8.21 - 4.0386 = 4.17
         public static final edu.wpi.first.math.geometry.Pose2d RedTargetPose = new edu.wpi.first.math.geometry.Pose2d(
-                16.541 - 4.6228, 8.211 - 4.0386, edu.wpi.first.math.geometry.Rotation2d.fromDegrees(180));
+                16.54105 - 4.62, 4.035, edu.wpi.first.math.geometry.Rotation2d.fromDegrees(180));
 
         // Blue Passing (Aiming at Blue Wall X=0)
         public static final edu.wpi.first.math.geometry.Pose2d BluePassingCornerRight = new edu.wpi.first.math.geometry.Pose2d(
