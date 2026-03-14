@@ -4,6 +4,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -30,14 +31,36 @@ public class AimingManager extends SubsystemBase {
     // private final Turret rightTurret;
     private final Hood leftHood;
     private final Hood rightHood;
+    private final Shooter leftShooter;
+    private final Shooter rightShooter;
+
+    // Use WPILib's interpolation map for ball trajectory tuning
+    private final InterpolatingDoubleTreeMap hoodMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap shooterMap = new InterpolatingDoubleTreeMap();
 
     public AimingManager(CommandSwerveDrivetrain drivetrain, ZoneDetection zoneDetection,
-            Turret leftTurret, Hood leftHood, Hood rightHood) {
+            Turret leftTurret, Hood leftHood, Hood rightHood, Shooter leftShooter, Shooter rightShooter) {
         this.drivetrain = drivetrain;
         this.zoneDetection = zoneDetection;
         this.leftTurret = leftTurret;
         this.leftHood = leftHood;
         this.rightHood = rightHood;
+        this.leftShooter = leftShooter;
+        this.rightShooter = rightShooter;
+
+        // Trajectory Data: Distance (m) -> Hood Angle (deg)
+        // TODO: Tune these placeholder values on the field!
+        hoodMap.put(1.0, 10.0);
+        hoodMap.put(3.0, 25.0);
+        hoodMap.put(5.0, 40.0);
+        hoodMap.put(7.0, 45.0);
+
+        // Trajectory Data: Distance (m) -> Shooter Speed (RPS - 3000 RPM is 50 RPS)
+        // TODO: Tune these placeholder values on the field!
+        shooterMap.put(1.0, 35.0);
+        shooterMap.put(3.0, 45.0);
+        shooterMap.put(5.0, 50.0);
+        shooterMap.put(7.0, 55.0);
     }
 
     @Override
@@ -49,25 +72,27 @@ public class AimingManager extends SubsystemBase {
             Pose2d currentRobotPose = drivetrain.getState().Pose;
             double robotHeadingDegrees = currentRobotPose.getRotation().getDegrees();
 
-            // 2. Calculate LEFT Turret & Hood
+            // 2. Calculate LEFT Turret & Hood & Shooter
             calculateAndApplyAiming(currentRobotPose, robotHeadingDegrees, targetPose,
-                    TurretConstants.TurretOffset1, leftTurret, leftHood, "Left");
+                    TurretConstants.TurretOffset1, leftTurret, leftHood, leftShooter, "Left");
 
-            // 3. Calculate RIGHT Turret & Hood (when uncommented)
+            // 3. Calculate RIGHT Turret & Hood & Shooter (when uncommented)
             // calculateAndApplyAiming(currentRobotPose, robotHeadingDegrees, targetPose,
-            // TurretConstants.TurretOffset2, rightTurret, rightHood, "Right");
+            // TurretConstants.TurretOffset2, rightTurret, rightHood, rightShooter, "Right");
         } else {
             // Idle state if no target is valid
             if (leftTurret != null)
                 leftTurret.setTargetAngle(0.0);
             if (leftHood != null)
                 leftHood.setTargetAngle(0.0);
+            if (leftShooter != null)
+                leftShooter.runIdle();
         }
     }
 
     private void calculateAndApplyAiming(Pose2d robotPose, double robotHeading, Pose2d targetPose,
-            Translation2d turretOffset, Turret turret, Hood hood, String sideName) {
-        if (turret == null && hood == null)
+            Translation2d turretOffset, Turret turret, Hood hood, Shooter shooter, String sideName) {
+        if (turret == null && hood == null && shooter == null)
             return;
 
         // Where is the turret actually located on the field based on the robot's
@@ -93,24 +118,26 @@ public class AimingManager extends SubsystemBase {
             turret.setTargetAngle(constrainedYaw);
         }
 
-        // ------------- PITCH (HOOD) MATH -------------
+        // ------------- PITCH (HOOD) MATH & SHOOTER SPEED MATH -------------
         double distanceMeters = delta.getNorm();
 
-        // TODO: Replace this placeholder with an actual interpolation map or physics
-        // calculation
-        // based on your exact shooter height and target height!
-        // Example: Closer = flatter angle (0 degrees), Further = steeper angle (up to
-        // 45 deg)
-        double calculatedPitch = MathUtil.clamp(distanceMeters * 5.0, 0.0, 45.0);
-
+        // Calculate Hood Pitch using interpolation map
+        double calculatedPitch = hoodMap.get(distanceMeters);
         if (hood != null) {
             hood.setTargetAngle(calculatedPitch);
+        }
+
+        // Calculate Shooter Speed using interpolation map
+        double calculatedRPS = shooterMap.get(distanceMeters);
+        if (shooter != null) {
+            shooter.Spin(calculatedRPS);
         }
 
         // Telemetry
         SmartDashboard.putNumber("AimingManager/" + sideName + "/Distance_m", distanceMeters);
         SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetYaw", constrainedYaw);
         SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetPitch", calculatedPitch);
+        SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetRPS", calculatedRPS);
     }
 
     /**
