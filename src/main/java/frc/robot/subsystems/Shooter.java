@@ -59,18 +59,6 @@ public class Shooter extends SubsystemBase {
         shooterWheel2.configure(config2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    public void setSpeed(double rps) {
-        shooterspeed = rps;
-        double rpm = rps * 60.0;
-        
-        // Feedforward does 90% of the work, PID just cleans up the error
-        double ffVoltage = m_feedforward.calculate(rpm);
-        double pidVoltage = m_pidController.calculate(shooterWheel1.getEncoder().getVelocity(), rpm);
-        
-        // Apply pure voltage instead of percent output (set()) since FF is in volts
-        shooterWheel1.setVoltage(ffVoltage + pidVoltage);
-    }
-
     public void Spin(double speedMeasurement) {
         // SparkMax expects RPM, so if RPS is given, convert to RPM
         shooterspeed = speedMeasurement;
@@ -93,12 +81,8 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Shooter " + m_side.name() + "/Power Requested", totalVoltage);
     }
 
-    public void Hack() {
-        shooterWheel1.set(Constants.ShooterConstants.ShootSpeed);
-    }
-
     public void runIdle() {
-        shooterWheel1.set(Constants.ShooterConstants.IdleSpeed);
+        Spin(Constants.ShooterConstants.IdleSpeed);
     }
 
     public void Spin() {

@@ -105,9 +105,9 @@ public final class Constants {
         public static double kP = 0.0005f;
         public static final double kV = 0.0021; // Volts per RPM. Roughly 12V / 5600 RPM for a NEO/Vortex
 
-        // Idle speed is now technically a target RPM
-        public static final double IdleSpeed = 5;
-        public static final double ShootSpeed = 58;
+        // Target speeds in RPS (Rotations Per Second)
+        public static final double IdleSpeed = 500.0 / 60.0; // 500 RPM
+        public static final double ShootSpeed = 3000.0 / 60.0; // 3000 RPM
     }
 
     public static final class TurretConstants {
