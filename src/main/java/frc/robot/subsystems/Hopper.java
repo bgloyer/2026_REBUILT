@@ -25,13 +25,13 @@ public class Hopper extends SubsystemBase {
         towerMotor = new TalonFX(HopperConstants.TowerCanID);
 
         TalonFXConfiguration floppeConfiguration = new TalonFXConfiguration();
-        floppeConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        floppeConfiguration.CurrentLimits.SupplyCurrentLimit = 70;
         floppeConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         flopperMotor.getConfigurator().apply(floppeConfiguration);
 
         TalonFXConfiguration toweConfiguration = new TalonFXConfiguration();
-        toweConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        toweConfiguration.CurrentLimits.SupplyCurrentLimit = 70;
         toweConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         towerMotor.getConfigurator().apply(toweConfiguration);
@@ -56,9 +56,8 @@ public class Hopper extends SubsystemBase {
     public void periodic() {
         super.periodic();
 
-        SmartDashboard.putNumber("Hopper/CanRange1_Dist_m", canRange1.getDistance().getValueAsDouble());
-        SmartDashboard.putNumber("Hopper/CanRange2_Dist_m", canRange2.getDistance().getValueAsDouble());
-        SmartDashboard.putBoolean("Hopper/HasBall", hasBall());
+        SmartDashboard.putNumber("Hopper/Flopper Current", flopperMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Hopper/Tower Current", towerMotor.getTorqueCurrent().getValueAsDouble());
     }
 
     /** Sets both hopper motors to the same speed. */

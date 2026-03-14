@@ -47,7 +47,7 @@ public final class Constants {
         // Interior space is ~10.25 inches (260mm).
         public static final double LaserMinDistance = 200.0;
 
-        public static final double HopperFeedSpeed = 1.0;
+        public static final double HopperFeedSpeed = 0.5;
 
         public static final int HopperCurrentLimit = 40;
         public static final double SplitterCurrentLimit = 30.0;
@@ -106,7 +106,7 @@ public final class Constants {
         public static final double kV = 0.0021; // Volts per RPM. Roughly 12V / 5600 RPM for a NEO/Vortex
 
         // Idle speed is now technically a target RPM
-        public static final double IdleSpeed = 10;
+        public static final double IdleSpeed = 5;
         public static final double ShootSpeed = 58;
     }
 
