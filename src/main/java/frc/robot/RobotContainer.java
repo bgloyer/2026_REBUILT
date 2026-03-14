@@ -149,10 +149,33 @@ public class RobotContainer {
 
                 driverController.rightTrigger(0.5f).whileTrue(m_hopper.runShootCommand());
 
-                // Reset the odometry to the chosen starting pose on D-PAD UP press
-                driverController.povUp().onTrue(drivetrain.runOnce(() -> {
+                // Reset the odometry to the chosen starting pose on BACK press
+                driverController.back().onTrue(drivetrain.runOnce(() -> {
                         drivetrain.resetPose(startingPoseChooser.getSelected());
                 }));         
+
+                // ******************** HOOD TUNING (POV) *****************************/
+                // Use POV directions to test different hood angles (10, 25, 40, 45 degrees)
+                // TO DO change from rotations to degrees eventually
+                driverController.povDown().onTrue(Commands.runOnce(() -> {
+                        leftHood.setTargetAngle(0);
+                        rightHood.setTargetAngle(0);
+                }, leftHood, rightHood));
+
+                driverController.povLeft().onTrue(Commands.runOnce(() -> {
+                        leftHood.setTargetAngle(3);
+                        rightHood.setTargetAngle(3);
+                }, leftHood, rightHood));
+
+                driverController.povUp().onTrue(Commands.runOnce(() -> {
+                        leftHood.setTargetAngle(7);
+                        rightHood.setTargetAngle(7);
+                }, leftHood, rightHood));
+
+                driverController.povRight().onTrue(Commands.runOnce(() -> {
+                        leftHood.setTargetAngle(10);
+                        rightHood.setTargetAngle(10);
+                }, leftHood, rightHood));
 
                 // ******************** OVERRIDES *****************************/
                 // Manual encoder resets without touching PID voltages
