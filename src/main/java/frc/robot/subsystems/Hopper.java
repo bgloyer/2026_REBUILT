@@ -11,18 +11,22 @@ import frc.robot.Constants.HopperConstants;
 public class Hopper extends SubsystemBase {
     // Motors
     private final TalonFX flopperMotor;
-    private final TalonFX towerMotor;
+    private final TalonFX leftTower, rightTower;
 
     // Sensors
     private final CANrange canRange1;
     private final CANrange canRange2;
 
+    private Intake m_intake;
+
     // References
     // private final Intake m_intake;
 
-    public Hopper() {
+    public Hopper(Intake intake) {
         flopperMotor = new TalonFX(HopperConstants.FlopperCanID);
-        towerMotor = new TalonFX(HopperConstants.TowerCanID);
+        leftTower = new TalonFX(HopperConstants.LeftTowerCANID);
+        rightTower = new TalonFX(HopperConstants.RightTowerCanID);
+
 
         TalonFXConfiguration floppeConfiguration = new TalonFXConfiguration();
         floppeConfiguration.CurrentLimits.SupplyCurrentLimit = 70;
@@ -34,52 +38,38 @@ public class Hopper extends SubsystemBase {
         toweConfiguration.CurrentLimits.SupplyCurrentLimit = 70;
         toweConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        towerMotor.getConfigurator().apply(toweConfiguration);
+        leftTower.getConfigurator().apply(toweConfiguration);
+        rightTower.getConfigurator().apply(toweConfiguration);
 
         canRange1 = new CANrange(HopperConstants.CanRangeID1);
         canRange2 = new CANrange(HopperConstants.CanRangeID2);
 
-        // Safety: Current Limits
-        // SparkFlexConfig flexConfig = new SparkFlexConfig();
-        // flexConfig.smartCurrentLimit(HopperConstants.HopperCurrentLimit);
-
-        // flopperMotor.configure(flexConfig, ResetMode.kResetSafeParameters,
-        // PersistMode.kPersistParameters);
-        // towerMotor.configure(flexConfig, ResetMode.kResetSafeParameters,
-        // PersistMode.kPersistParameters);
-
-        // Optionally, apply invert if needed based on testing
-        // flexConfig.inverted(true);
-    }
-
-    @Override
-    public void periodic() {
-        super.periodic();
-
-        SmartDashboard.putNumber("Hopper/Flopper Current", flopperMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hopper/Tower Current", towerMotor.getTorqueCurrent().getValueAsDouble());
+        m_intake = intake;
     }
 
     /** Sets both hopper motors to the same speed. */
-    public void setSpeed(double speed) {
-        flopperMotor.set(-speed);
-        towerMotor.set(-speed);
+    public void setSpeed(double flopperspeed, double towerspeed) {
+        flopperMotor.set(-flopperspeed);
+        leftTower.set(towerspeed);
+        rightTower.set(-towerspeed);
     }
 
     public void stop() {
-        setSpeed(0.0);
+        m_intake.setSpeed(0);
+        setSpeed(0.0, 0.0);
     }
 
-    public void feed(double speed) {
-        setSpeed(Math.abs(speed));
+    public void feed(double flopper, double tower) {
+        m_intake.setSpeed(0.4);
+        setSpeed(Math.abs(flopper), Math.abs(tower));
     }
 
-    public void reverse(double speed) {
-        setSpeed(-Math.abs(speed));
+    public void reverse(double flopper, double tower) {
+        setSpeed(-Math.abs(flopper), -Math.abs(tower));
     }
 
-    public Command runHopper(double speed) {
-        return run(() -> setSpeed(speed));
+    public Command runHopper(double flopper, double tower) {
+        return run(() -> setSpeed(flopper, tower));
     }
 
     /** Runs both hoppers at default feed speed; stops when a ball is present. */
@@ -88,13 +78,13 @@ public class Hopper extends SubsystemBase {
             if (hasBall()) {
                 stop();
             } else {
-                feed(HopperConstants.HopperFeedSpeed);
+                feed(HopperConstants.HopperFeedSpeed, HopperConstants.TowerFeedSpeed);
             }
         }).finallyDo(interrupted -> stop());
     }
 
-    public Command feedCommand(double speed) {
-        return run(() -> feed(speed));
+    public Command feedCommand(double hopper, double tower) {
+        return run(() -> feed(hopper, tower));
     }
 
     public Command stopCommand() {
@@ -124,14 +114,14 @@ public class Hopper extends SubsystemBase {
             if (hasBall()) {
                 stop();
             } else {
-                feed(HopperConstants.HopperFeedSpeed);
+                feed(HopperConstants.HopperFeedSpeed, HopperConstants.TowerFeedSpeed);
             }
         }).finallyDo(interrupted -> stop());
     }
 
     public Command runShootCommand() {
         return run(() -> {
-            feed(HopperConstants.HopperFeedSpeed);
+            feed(HopperConstants.HopperFeedSpeed, HopperConstants.TowerFeedSpeed);
         }).finallyDo(interrupted -> stop());
     }
 
@@ -145,7 +135,7 @@ public class Hopper extends SubsystemBase {
         edu.wpi.first.math.filter.Debouncer debouncer = new edu.wpi.first.math.filter.Debouncer(1.0,
                 edu.wpi.first.math.filter.Debouncer.DebounceType.kBoth);
 
-        return run(() -> feed(HopperConstants.HopperFeedSpeed))
+        return run(() -> feed(HopperConstants.HopperFeedSpeed, HopperConstants.TowerFeedSpeed))
                 .until(() -> debouncer.calculate(!hasBall()))
                 .finallyDo(interrupted -> stop());
     }

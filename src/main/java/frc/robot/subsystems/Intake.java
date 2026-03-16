@@ -190,7 +190,7 @@ public class Intake extends SubsystemBase {
      * it zeroes the encoder and sets target back to retracted.
      */
     public Command autoHome() {
-        return run(() -> deployMotor.setVoltage(-3.0))
+        return run(() -> deployMotor.setVoltage(-5.0))
                 .until(() -> {
                     double current = Math.abs(deployMotor.getStatorCurrent().getValueAsDouble());
                     double velocity = deployMotor.getVelocity().getValueAsDouble();

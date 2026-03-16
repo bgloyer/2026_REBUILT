@@ -1,4 +1,3 @@
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -45,7 +44,8 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(MaxSpeed);
         private final CommandXboxController driverController = new CommandXboxController(0);
-        //private final CommandXboxController overrideController = new CommandXboxController(1);
+        // private final CommandXboxController overrideController = new
+        // CommandXboxController(1);
         /***************************
          * CORE SUBSYSTEMS
          ******************************/
@@ -56,8 +56,7 @@ public class RobotContainer {
          * INTAKE & INDEXING
          ******************************/
         private final Intake m_intake = new Intake();
-        private final Hopper m_hopper = new Hopper();
-        // private final Climber m_climber = new Climber();
+        private final Hopper m_hopper = new Hopper(m_intake);
 
         /***************************
          * SHOOTER & TARGETING
@@ -68,12 +67,16 @@ public class RobotContainer {
                         Constants.ShooterConstants.ShooterCanId4, SHOOTER_SIDE.RIGHT);
 
         // Turrets for testing
-        private final Turret leftTurret = new Turret(Constants.TurretConstants.TurretCanId2,
-                Constants.TurretConstants.encoderCanID2, Constants.TurretConstants.TurretOffset2,
-                drivetrain, m_zoneDetection, TURRET_SIDE.LEFT);
-        private final Turret rightTurret = new Turret(Constants.TurretConstants.TurretCanId1,
-                Constants.TurretConstants.encoderCanID1, Constants.TurretConstants.TurretOffset1,
-                drivetrain, m_zoneDetection, TURRET_SIDE.RIGHT);
+        // private final Turret leftTurret = new
+        // Turret(Constants.TurretConstants.TurretCanId2,
+        // Constants.TurretConstants.encoderCanID2,
+        // Constants.TurretConstants.TurretOffset2,
+        // drivetrain, m_zoneDetection, TURRET_SIDE.LEFT);
+        // private final Turret rightTurret = new
+        // Turret(Constants.TurretConstants.TurretCanId1,
+        // Constants.TurretConstants.encoderCanID1,
+        // Constants.TurretConstants.TurretOffset1,
+        // drivetrain, m_zoneDetection, TURRET_SIDE.RIGHT);
 
         private final Hood rightHood = new Hood(Constants.HoodConstants.HoodCanId1, Hood.HOOD_SIDE.RIGHT);
         private final Hood leftHood = new Hood(Constants.HoodConstants.HoodCanId2, Hood.HOOD_SIDE.LEFT);
@@ -82,21 +85,10 @@ public class RobotContainer {
                         drivetrain, m_zoneDetection, leftHood, rightHood, leftShooter, rightShooter);
 
         private final SendableChooser<Command> autoChooser;
-        private final SendableChooser<Pose2d> startingPoseChooser = new SendableChooser<>();
 
         public RobotContainer() {
                 configureNamedCommands();
                 configureBindings();
-
-                // Setup the starting pose chooser for easy testing
-                startingPoseChooser.setDefaultOption("Blue Starting Zone",
-                                new Pose2d(new Translation2d(2.0, 4.03), Rotation2d.fromDegrees(0)));
-                startingPoseChooser.addOption("Red Starting Zone",
-                                new Pose2d(new Translation2d(14.54, 4.03), Rotation2d.fromDegrees(180)));
-                SmartDashboard.putData("Starting Pose Selection", startingPoseChooser);
-
-                // setting our inital pose by default to blue
-                drivetrain.resetPose(startingPoseChooser.getSelected());
 
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto selection", autoChooser);
@@ -138,9 +130,10 @@ public class RobotContainer {
                 driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
                 // Click to drop intake
-                driverController.rightBumper().onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
+                driverController.rightBumper()
+                                .onTrue(m_intake.runDeployAndIntakeCommand(() -> drivetrain.getState().Speeds));
 
-                // Click to retract intake
+                // // Click to retract intake
                 driverController.leftBumper().onTrue(m_intake.runRetractCommand());
 
                 // ********************FUNCTIONS For Testing*****************************/
@@ -153,14 +146,6 @@ public class RobotContainer {
 
                 driverController.rightTrigger(0.5f).whileTrue(shootGroup);
 
-                // Reset the odometry to the chosen starting pose on BACK press
-                driverController.back().onTrue(drivetrain.runOnce(() -> {
-                        drivetrain.resetPose(startingPoseChooser.getSelected());
-                }));         
-
-                // ******************** HOOD TUNING (POV) *****************************/
-                // Use POV directions to test different hood angles (10, 25, 40, 45 degrees)
-                // TO DO change from rotations to degrees eventually
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         leftHood.setTargetAngle(0);
                         rightHood.setTargetAngle(0);

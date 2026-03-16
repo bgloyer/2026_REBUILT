@@ -49,20 +49,15 @@ public class AimingManager extends SubsystemBase {
         // TODO: Tune these placeholder values on the field!
         hoodMap.put(1.78, 0.0);
         hoodMap.put(1.97, 0.0);
-        hoodMap.put(2.76, 3.0);
-        hoodMap.put(2.58, 3.0);
-        hoodMap.put(3.1, 7.0);
-        hoodMap.put(3.0, 7.0);
+        hoodMap.put(2.76, 0.0);
+        hoodMap.put(2.58, 0.0);
 
         // Trajectory Data: Distance (m) -> Shooter Speed (RPS - 3000 RPM is 50 RPS)
         // TODO: Tune these placeholder values on the field!
-        shooterMap.put(1.97, 5000.0/60);
-        shooterMap.put(1.78, 5000.0/60);
-        shooterMap.put(2.76, 5000.0/60);
+        shooterMap.put(1.5, 1700.0/60);
+        shooterMap.put(1.9, 1900.0/60);
+        shooterMap.put(2.4, 2000.0/60);
         shooterMap.put(2.58, 5000.0/60);
-        shooterMap.put(3.1, 5500.0);
-        shooterMap.put(3.18, 5500.0);
-        shooterMap.put(7.0, 55.0);
     }
 
     @Override
@@ -84,12 +79,8 @@ public class AimingManager extends SubsystemBase {
             // Idle state if no target is valid
             if (leftHood != null)
                 leftHood.setTargetAngle(0.0);
-            if (leftShooter != null)
-                leftShooter.runIdle();
             if (rightHood != null)
                 rightHood.setTargetAngle(0.0);
-            if (rightShooter != null)
-                rightShooter.runIdle();
         }
     }
 
@@ -109,21 +100,20 @@ public class AimingManager extends SubsystemBase {
         double distanceMeters = delta.getNorm();
 
         // Calculate Hood Pitch using interpolation map
-        double calculatedPitch = hoodMap.get(distanceMeters);
-        if (hood != null) {
-            hood.setTargetAngle(calculatedPitch);
-        }
+        // double calculatedPitch = hoodMap.get(distanceMeters);
+        // if (hood != null) {
+        //     hood.setTargetAngle(calculatedPitch);
+        // }
 
         // Calculate Shooter Speed using interpolation map
-        double calculatedRPS = shooterMap.get(distanceMeters);
-        if (shooter != null) {
-            shooter.Spin(calculatedRPS);
-        }
+        // double calculatedRPS = shooterMap.get(distanceMeters);
+        // if (shooter != null) {
+        //     shooter.Spin(calculatedRPS);
+        // }
 
         // Telemetry
         SmartDashboard.putNumber("AimingManager/" + sideName + "/Distance_m", distanceMeters);
-        SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetPitch", calculatedPitch);
-        SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetRPS", calculatedRPS);
+        // SmartDashboard.putNumber("AimingManager/" + sideName + "/TargetPitch", calculatedPitch);
     }
 
     /**
