@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,6 +19,9 @@ public class Hopper extends SubsystemBase {
     private final CANrange canRange2;
 
     private Intake m_intake;
+    private VoltageOut voltagecontrol = new VoltageOut(12);
+    private VoltageOut negvoltagecontrol = new VoltageOut(-12);
+    private VoltageOut voltagestop = new VoltageOut(0);
 
     // References
     // private final Intake m_intake;
@@ -25,7 +29,7 @@ public class Hopper extends SubsystemBase {
     public Hopper(Intake intake) {
         flopperMotor = new TalonFX(HopperConstants.FlopperCanID);
         leftTower = new TalonFX(HopperConstants.LeftTowerCANID);
-        rightTower = new TalonFX(HopperConstants.RightTowerCanID);
+        rightTower = new TalonFX(HopperConstants.RightTowerCANID);
 
 
         TalonFXConfiguration floppeConfiguration = new TalonFXConfiguration();
@@ -50,13 +54,17 @@ public class Hopper extends SubsystemBase {
     /** Sets both hopper motors to the same speed. */
     public void setSpeed(double flopperspeed, double towerspeed) {
         flopperMotor.set(-flopperspeed);
-        leftTower.set(towerspeed);
-        rightTower.set(-towerspeed);
+        leftTower.setControl(voltagecontrol);
+        rightTower.setControl(negvoltagecontrol);
     }
 
     public void stop() {
         m_intake.setSpeed(0);
-        setSpeed(0.0, 0.0);
+        //setSpeed(0.0, 0.0);
+
+        flopperMotor.set(0);
+        leftTower.setControl(voltagestop);
+        rightTower.setControl(voltagestop); 
     }
 
     public void feed(double flopper, double tower) {

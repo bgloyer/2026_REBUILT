@@ -40,8 +40,8 @@ public final class Constants {
 
     public static final class HopperConstants {
         public static final int FlopperCanID = 8;
-        public static final int RightTowerCanID = 9;
-        public static final int LeftTowerCANID = 10;
+        public static final int LeftTowerCANID = 9;
+        public static final int RightTowerCANID = 10;
 
         public static final int CanRangeID1 = 4;
         public static final int CanRangeID2 = 5;
@@ -49,7 +49,7 @@ public final class Constants {
         public static final double LaserMinDistance = 200.0;
 
         public static final double HopperFeedSpeed = 0.7;
-        public static final double TowerFeedSpeed = 1;
+        public static final double TowerFeedSpeed = 1.0;
 
         public static final int HopperCurrentLimit = 40;
         public static final double SplitterCurrentLimit = 30.0;
@@ -104,12 +104,12 @@ public final class Constants {
         public static final int ShooterCanId3 = 18;// right
         public static final int ShooterCanId4 = 19;
 
-        public static double kP = 0.0040f;
-        public static final double kV = 0.0035; // Volts per RPM. Roughly 12V / 5600 RPM for a NEO/Vortex
+        public static double kP = 0.0005f;
+        public static final double kV = 0.0021; // Volts per RPM. Roughly 12V / 5600 RPM for a NEO/Vortex
 
         // Target speeds in RPS (Rotations Per Second)
-        public static final double IdleSpeed = 1500.0 / 60.0; // 500 RPM
-        public static final double ShootSpeed = 3000.0 / 60.0; // 3000 RPM
+        public static final double IdleSpeed = 500.0 / 60.0; // 500 RPM
+        public static final double ShootSpeed = 5500.0 / 60.0; // 3000 RPM
     }
 
     public static final class TurretConstants {
@@ -121,24 +121,19 @@ public final class Constants {
         public static final edu.wpi.first.math.geometry.Translation2d TurretOffset2 = new edu.wpi.first.math.geometry.Translation2d(
                 Units.inchesToMeters(-6.24), Units.inchesToMeters(8.15)); // right
 
+        public static final int encoderCanID1 = 2;
+        public static final int encoderCanID2 = 3;
+
         public static final class LeftTurret {
             public static final double kP = 0.3d;
             public static final double kI = 0.0d;
             public static final double kD = 0.0d;
-            
-            // TODO: Update these limits after manually measuring encoder limits
-            public static final double MinRotationLimit = -2.0; 
-            public static final double MaxRotationLimit = 2.0;
         }
 
         public static final class RightTurret {
             public static final double kP = 0.3d;
             public static final double kI = 0.0d;
             public static final double kD = 0.0d;
-
-            // TODO: Update these limits after manually measuring encoder limits
-            public static final double MinRotationLimit = -2.0; 
-            public static final double MaxRotationLimit = 2.0;
         }
         // public static final double kTolerance = 0.0; // Degrees
 
@@ -149,6 +144,12 @@ public final class Constants {
 
         public static final double MinAngle = -90;
         public static final double MaxAngle = 90; // need to convert to angle and eventually use radians
+
+        // Offset for the absolute CANcoder to treat its starting valid position as 0
+        // degrees.
+        // Measured in motor rotations. (45 degrees = 1 rotation).
+        public static final double TurrentRotationOffsetLeft = -0.13;
+        public static final double TurrentRotationOffsetRight = -0.337;
     }
 
     public static final class FieldConstants {
